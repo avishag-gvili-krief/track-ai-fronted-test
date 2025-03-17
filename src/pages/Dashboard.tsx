@@ -23,6 +23,23 @@ import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import { DataGrid } from "@mui/x-data-grid";
+import { format } from "date-fns";
+import { hasFlag } from "country-flag-icons";
+import Flags from "country-flag-icons/react/3x2";
+import {
+  fetchPhoneNumbers,
+  createPhoneNumber,
+  updatePhoneNumber,
+} from "../api/containerService";
+
+const formatDate = (dateString: string | undefined) => {
+  if (!dateString) return "N/A";
+
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "N/A";
+
+  return format(date, "dd MMM'’'yy h:mm a");
+};
 
 interface BusinessDataItem {
   key: string;
@@ -96,12 +113,70 @@ const getInitials = (firstName: string, lastName: string) =>
 export default function Dashboard() {
   const authContext = useContext(AuthContext);
   const [shipments, setShipments] = useState<TrackedShipment[]>([]);
+  const [phoneNumbers, setPhoneNumbers] = useState<{
+    [key: string]: { phone: string; shipmentId: string };
+  }>({});
+  const [localPhoneNumbers, setLocalPhoneNumbers] = useState<{
+    [key: string]: string;
+  }>({});
+  const [phoneIds, setPhoneIds] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     if (authContext?.user?.winwordData?.data?.trackedShipments?.data) {
       setShipments(authContext.user.winwordData.data.trackedShipments.data);
     }
   }, [authContext?.user]);
+
+  useEffect(() => {
+    const loadPhoneNumbers = async () => {
+      const containerIds = shipments.map((s) => s.shipment.containerNumber);
+      const data = await fetchPhoneNumbers(containerIds);
+      setPhoneNumbers(data);
+      setLocalPhoneNumbers(
+        Object.keys(data).reduce((acc, container) => {
+          acc[container] = data[container]?.phone || "";
+          return acc;
+        }, {} as { [key: string]: string })
+      );
+    };
+
+    loadPhoneNumbers();
+  }, [shipments]);
+
+  const handleInputChange = (containerNumber: string, value: string) => {
+    setLocalPhoneNumbers((prev) => ({
+      ...prev,
+      [containerNumber]: value,
+    }));
+  };
+
+  const handleSave = async (containerNumber: string, shipmentId: string) => {
+    const newPhone = localPhoneNumbers[containerNumber];
+
+    if (!newPhone || !shipmentId) return;
+
+    await createPhoneNumber(containerNumber, newPhone, shipmentId);
+
+    setPhoneNumbers((prev) => ({
+      ...prev,
+      [containerNumber]: { phone: newPhone, shipmentId },
+    }));
+  };
+
+  const handleUpdate = async (containerNumber: string) => {
+    const newPhone = localPhoneNumbers[containerNumber];
+    const id = phoneIds[containerNumber];
+    const shipmentId = phoneNumbers[containerNumber]?.shipmentId || "";
+
+    if (!newPhone || !id || !shipmentId) return;
+
+    await updatePhoneNumber(id, containerNumber, newPhone, shipmentId);
+
+    setPhoneNumbers((prev) => ({
+      ...prev,
+      [containerNumber]: { phone: newPhone, shipmentId },
+    }));
+  };
 
   const user = authContext?.user;
   const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`;
@@ -129,9 +204,47 @@ export default function Dashboard() {
         headerName: "Latest Carrier ETD/ATD",
         width: 180,
       },
-      { field: "pol", headerName: "POL", width: 140 },
-      { field: "path", headerName: "Path", width: 180 },
-      { field: "pod", headerName: "POD", width: 140 },
+      {
+        field: "pol",
+        headerName: "POL",
+        width: 200,
+        renderCell: (params: any) => params.value || "N/A",
+      },
+
+      {
+        field: "pod",
+        headerName: "POD",
+        width: 200,
+        renderCell: (params) => params.value || "N/A",
+      },
+
+      {
+        field: "path",
+        headerName: "Path",
+        width: 250,
+        renderCell: (params) => (
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <span style={{ fontWeight: "bold" }}>
+              {params.value.pol} → {params.value.pod}
+            </span>
+            <LinearProgress
+              variant="determinate"
+              value={params.value.progress}
+              sx={{ flexGrow: 1, height: "10px", borderRadius: "5px" }}
+            />
+            <span style={{ fontSize: "12px", fontWeight: "bold" }}>
+              {Math.round(params.value.progress)}%
+            </span>
+          </div>
+        ),
+      },
       { field: "containerStatus", headerName: "Container Status", width: 220 },
       { field: "currentVessel", headerName: "Current Vessel", width: 180 },
       {
@@ -142,14 +255,21 @@ export default function Dashboard() {
       {
         field: "latestCarrierETAOrATA",
         headerName: "Latest Carrier ETA/ATA",
-        width: 180,
+        width: 200,
+        renderCell: (params) =>
+          formatEtaWithColor(params.value, params.row.statusInsights),
       },
       {
         field: "maritimeAiPredictedETA",
         headerName: "Maritime AI Predicted ETA",
         width: 200,
       },
-      { field: "statusInsights", headerName: "Status & Insights", width: 220 },
+      {
+        field: "statusInsights",
+        headerName: "Status & Insights",
+        width: 220,
+        renderCell: (params) => formatStatusInsights(params.value),
+      },
       { field: "originCountry", headerName: "Origin Country", width: 180 },
       { field: "supplierName", headerName: "Supplier Name", width: 220 },
       {
@@ -161,6 +281,51 @@ export default function Dashboard() {
         field: "customerReference",
         headerName: "Customer Reference",
         width: 200,
+      },
+      {
+        field: "phoneNumber",
+        headerName: "Phone Number",
+        width: 300,
+        renderCell: (params) => {
+          const containerNumber = params.row.containerNumber;
+          const shipmentId = params.row.shipmentId;
+          const currentPhone = phoneNumbers[containerNumber]?.phone || "";
+          const editedPhone =
+            localPhoneNumbers[containerNumber] ?? currentPhone;
+
+          return (
+            <Box display="flex" gap={1} alignItems="center">
+              <TextField
+                variant="outlined"
+                size="small"
+                value={editedPhone}
+                onChange={(e) =>
+                  handleInputChange(containerNumber, e.target.value)
+                }
+                sx={{ width: "140px" }}
+              />
+              {currentPhone ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleUpdate(containerNumber)}
+                  disabled={!localPhoneNumbers[containerNumber]}
+                >
+                  Update
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() => handleSave(containerNumber, shipmentId)}
+                  disabled={!localPhoneNumbers[containerNumber]}
+                >
+                  Save
+                </Button>
+              )}
+            </Box>
+          );
+        },
       },
     ],
     []
@@ -190,9 +355,175 @@ export default function Dashboard() {
   function escapeRegExp(value: string): string {
     return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
   }
+  const formatStatusInsights = (value: string) => {
+    if (!value || value === "N/A" || value === "Unknown") {
+      return <span style={{ color: "#999", fontSize: "13px" }}>N/A</span>;
+    }
+
+    let color = "#3b82f6"; // כחול ברירת מחדל ל- "On Time"
+    let sign = "";
+    let label = "as initial ETA"; // הכיתוב הקטן מתחת
+    let displayValue = "On Time"; // ערך ברירת מחדל
+
+    if (value.includes("Early")) {
+      color = "#14b8a6"; // ירוק להגעה מוקדמת
+      sign = "-";
+      displayValue = `${value.replace(/\D/g, "")}d early`;
+      label = "from initial ETA";
+    } else if (value.includes("Significant delay")) {
+      color = "#e67e22"; // כתום לעיכוב קל
+      sign = "+";
+      displayValue = `${value.replace(/\D/g, "")}d late`;
+      label = "from initial ETA";
+    } else if (value.includes("Critical delay")) {
+      color = "#ef4444"; // אדום לעיכוב קריטי
+      sign = "+";
+      displayValue = `${value.replace(/\D/g, "")}d late`;
+      label = "from initial ETA";
+    } else if (value.includes("Tracking Completed")) {
+      color = "#22c55e"; // ירוק למשלוחים שהושלמו
+      displayValue = "Tracking Completed";
+      label = "";
+    }
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "left",
+          textAlign: "left",
+          lineHeight: "1.2",
+          padding: "4px 0",
+        }}
+      >
+        <span style={{ color, fontWeight: "bold", fontSize: "14px" }}>
+          {sign}
+          {displayValue}
+        </span>
+        {label && (
+          <span style={{ color: "#888", fontSize: "12px" }}>{label}</span>
+        )}
+      </div>
+    );
+  };
+
+  const getFlag = (locode = "") => {
+    if (!locode) return null;
+
+    const countryCode = locode.slice(0, 2).toUpperCase();
+    const exist = hasFlag(countryCode);
+    const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+
+    if (!exist) {
+      return null;
+    } else {
+      const countryName = regionNames.of(countryCode);
+      const FlagComponent = Flags[countryCode];
+
+      return FlagComponent ? (
+        <FlagComponent
+          title={countryName}
+          style={{
+            width: "20px",
+            height: "14px",
+            display: "inline-block",
+            marginRight: "4px",
+            verticalAlign: "middle",
+            borderRadius: "2px",
+            boxShadow: "0 0 2px rgba(0, 0, 0, 0.2)",
+          }}
+        />
+      ) : null;
+    }
+  };
+
+  const getPortWithFlag = (
+    locode: string | undefined,
+    name: string | undefined
+  ) => {
+    if (!locode || !name) return "N/A";
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: "6px",
+          textAlign: "left",
+          padding: "3px 0",
+        }}
+      >
+        {getFlag(locode)}
+        <span style={{ fontSize: "13px", fontWeight: "bold" }}>{name}</span>
+        <span style={{ fontSize: "11px", color: "#666" }}>{locode}</span>
+      </div>
+    );
+  };
+  const formatEtaWithColor = (
+    dateString: string | undefined,
+    status: string
+  ) => {
+    const formattedDate = formatDate(dateString);
+    if (formattedDate === "N/A")
+      return <span style={{ color: "#999" }}>N/A</span>;
+
+    let color = "#3b82f6"; // כחול - On Time
+    if (status.includes("Early")) color = "#14b8a6"; // ירוק - מוקדם
+    else if (status.includes("Significant delay"))
+      color = "#e67e22"; // כתום - עיכוב קל
+    else if (status.includes("Critical delay"))
+      color = "#ef4444"; // אדום - עיכוב קריטי
+    else if (status.includes("Tracking Completed")) color = "#22c55e"; // ירוק כהה - הושלם
+
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        <span
+          style={{
+            width: "8px",
+            height: "8px",
+            backgroundColor: color,
+            borderRadius: "50%",
+            display: "inline-block",
+          }}
+        />
+        <span>{formattedDate}</span>
+      </div>
+    );
+  };
+
+  const getPathProgress = (shipment: any) => {
+    if (
+      !shipment.status ||
+      !shipment.initialCarrierETA ||
+      !shipment.status.predicted?.datetime
+    ) {
+      return 0;
+    }
+
+    const shipmentStart = new Date(
+      shipment.status.actualDepartureAt || shipment.status.estimatedDepartureAt
+    );
+    const shipmentEnd = new Date(
+      shipment.status.predicted.datetime || shipment.status.actualArrivalAt
+    );
+    const now = new Date();
+
+    if (shipmentStart >= shipmentEnd) return 100; // אם תאריך הסיום קטן מההתחלה, זה אומר שהמשלוח הסתיים.
+
+    const totalDuration = shipmentEnd.getTime() - shipmentStart.getTime();
+    const elapsedDuration = now.getTime() - shipmentStart.getTime();
+    return Math.min(100, Math.max(0, (elapsedDuration / totalDuration) * 100));
+  };
 
   const mapShipmentsToRows = (shipments: TrackedShipment[]) => {
     return shipments.map((tracked, index) => {
+      const podPort =
+        tracked.metadata?.businessData?.find(
+          (item) => item.key === "Discharge Port"
+        )?.value || "N/A";
+
       const customerNumber =
         tracked.metadata?.businessData?.find(
           (item) => item.key === "Customer Code"
@@ -206,25 +537,40 @@ export default function Dashboard() {
 
         // 🔹 "Initial Carrier ETD" - תאריך בפורמט קריא
         initialCarrierETD: tracked.shipment.initialCarrierETD
-          ? new Date(tracked.shipment.initialCarrierETD).toLocaleString()
+          ? formatDate(tracked.shipment.initialCarrierETD).toLocaleString()
           : "N/A",
 
         // 🔹 "Latest Carrier ETD/ATD" - לקיחה כמו בקוד הראשון
         latestCarrierETDOrATD: tracked.shipment.status?.actualDepartureAt
-          ? new Date(tracked.shipment.status.actualDepartureAt).toLocaleString()
+          ? formatDate(
+              tracked.shipment.status.actualDepartureAt
+            ).toLocaleString()
           : tracked.shipment.status?.estimatedDepartureAt
-          ? new Date(
+          ? formatDate(
               tracked.shipment.status.estimatedDepartureAt
             ).toLocaleString()
           : "N/A",
 
-        pol: tracked.shipment.status?.pol?.properties?.locode || "N/A",
-        pod: tracked.shipment.status?.pod?.properties?.locode || "N/A",
-        path:
-          tracked.shipment.status?.pol?.properties?.locode &&
-          tracked.shipment.status?.pod?.properties?.locode
-            ? `${tracked.shipment.status.pol.properties.locode} -> ${tracked.shipment.status.pod.properties.locode}`
-            : "N/A",
+        pol: tracked.shipment.status?.pol
+          ? getPortWithFlag(
+              tracked.shipment.status.pol.properties?.locode,
+              tracked.shipment.status.pol.properties?.name
+            )
+          : "N/A",
+
+        // ✅ POD - לקיחה **מ-metadata.businessData** ושילוב דגל
+        pod: tracked.shipment.status?.pod
+          ? getPortWithFlag(
+              tracked.shipment.status.pod.properties?.locode,
+              podPort
+            )
+          : "N/A",
+
+        path: {
+          pol: tracked.shipment.status?.pol?.properties?.locode || "N/A",
+          pod: tracked.shipment.status?.pod?.properties?.locode || "N/A",
+          progress: getPathProgress(tracked.shipment),
+        },
 
         // 🔹 "Container Status" - תואם לקוד הראשון
         containerStatus:
@@ -247,28 +593,26 @@ export default function Dashboard() {
             : "N/A"),
 
         initialCarrierETA: tracked.shipment.initialCarrierETA
-          ? new Date(tracked.shipment.initialCarrierETA).toLocaleString()
+          ? formatDate(tracked.shipment.initialCarrierETA).toLocaleString()
           : "N/A",
         latestCarrierETAOrATA: tracked.shipment.status?.actualArrivalAt
-          ? new Date(tracked.shipment.status.actualArrivalAt).toLocaleString()
+          ? formatDate(tracked.shipment.status.actualArrivalAt).toLocaleString()
           : tracked.shipment.status?.estimatedArrivalAt
-          ? new Date(
+          ? formatDate(
               tracked.shipment.status.estimatedArrivalAt
             ).toLocaleString()
           : "N/A",
 
         maritimeAiPredictedETA: tracked.shipment.status?.predicted?.datetime
-          ? new Date(
+          ? formatDate(
               tracked.shipment.status.predicted.datetime
             ).toLocaleString()
           : "N/A",
 
-        // 🔹 "Origin Country" - מיפוי כמו בקוד הראשון
         originCountry:
           tracked.metadata?.businessData?.find(
             (item) => item.key.trim() === "Origin Country"
           )?.value || "N/A",
-
         supplierName:
           tracked.metadata?.businessData?.find(
             (item) => item.key === "Supplier Name"
@@ -288,16 +632,21 @@ export default function Dashboard() {
           const init = tracked.shipment.initialCarrierETA;
           const pred = tracked.shipment.status?.predicted?.datetime;
           const diffDays = diffCarrierDays(init, pred);
-          if (diffDays === null) return "Unknown";
+
+          if (tracked.shipment.status?.voyageStatus === "trackingCompleted") {
+            return "Tracking Completed";
+          }
+
+          if (diffDays === null) return "N/A";
 
           if (diffDays === 0) {
             return "On Time";
           } else if (diffDays < 0) {
-            return "Early (1+ days)";
+            return `Early (${Math.abs(diffDays)}+ days)`;
           } else if (diffDays >= 1 && diffDays <= 4) {
-            return "Significant delay (1-4 days)";
+            return `Significant delay (${diffDays} days)`;
           } else if (diffDays >= 5) {
-            return "Critical delay (5+ days)";
+            return `Critical delay (${diffDays}+ days)`;
           }
           return "Unknown";
         })(),
@@ -320,7 +669,13 @@ export default function Dashboard() {
     setSearchText(searchValue);
   };
 
-  const rows = useMemo(() => mapShipmentsToRows(shipments), [shipments]);
+  const rows = useMemo(() => {
+    return mapShipmentsToRows(shipments).map((row) => ({
+      ...row,
+      shipmentId: row.id || "",
+      phoneNumber: phoneNumbers[row.containerNumber]?.phone || "",
+    }));
+  }, [shipments, phoneNumbers]);
 
   const filteredRows = useMemo(() => {
     let filtered = rows;
@@ -370,40 +725,34 @@ export default function Dashboard() {
     return diff;
   }
 
-  let stats = {
-    total: shipments.length,
-    onTime: 0,
-    early: 0,
-    delayed: 0,
-    critical: 0,
-    completed: 0,
-  };
+  const shipmentStats = useMemo(() => {
+    let stats = {
+      total: filteredRows.length,
+      onTime: 0,
+      early: 0,
+      delayed: 0,
+      critical: 0,
+      completed: 0,
+    };
 
-  shipments.forEach((tracked) => {
-    const status = tracked.shipment.status;
-    if (status?.voyageStatus === "trackingCompleted") {
-      stats.completed++;
-      return;
-    }
+    filteredRows.forEach((row) => {
+      const status = row.statusInsights;
 
-    const initial = tracked.shipment.initialCarrierETA;
-    const predicted = status?.predicted?.datetime;
-    const diffDays = diffCarrierDays(initial, predicted);
+      if (status === "Tracking Completed") {
+        stats.completed++;
+      } else if (status.includes("On Time")) {
+        stats.onTime++;
+      } else if (status.includes("Early")) {
+        stats.early++;
+      } else if (status.includes("Significant delay")) {
+        stats.delayed++;
+      } else if (status.includes("Critical delay")) {
+        stats.critical++;
+      }
+    });
 
-    if (diffDays === null) {
-      return;
-    } else if (diffDays === 0) {
-      stats.onTime++;
-    } else if (diffDays < 0) {
-      stats.early++;
-    } else if (diffDays >= 1 && diffDays <= 4) {
-      stats.delayed++;
-    } else if (diffDays >= 5) {
-      stats.critical++;
-    }
-  });
-
-  const shipmentStats = stats;
+    return stats;
+  }, [filteredRows]); 
 
   const statusColors = {
     onTime: "#3b82f6",
