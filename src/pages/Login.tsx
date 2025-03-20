@@ -34,7 +34,7 @@ const Login = () => {
     setLoading(true);
     try {
       await login(email, password);
-      navigate("/dashboard");
+      navigate("/");
     } catch {
       setError("Login failed. Please check your credentials.");
     } finally {

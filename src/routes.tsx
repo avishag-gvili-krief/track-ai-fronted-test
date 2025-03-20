@@ -5,7 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+import DashboardWrapper from "./component/DashboardWrapper";
 
 const AppRoutes = () => {
   return (
@@ -17,7 +17,7 @@ const AppRoutes = () => {
           path="/dashboard"
           element={
             <>
-              <Dashboard />
+              <DashboardWrapper/>
             </>
           }
         />

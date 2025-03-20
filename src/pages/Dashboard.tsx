@@ -1191,11 +1191,13 @@ const statusOptions = [
   "Critical delay (5+ days)",
   "Tracking Completed",
 ];
-
+interface DashboardProps {
+  isCompact: boolean;
+}
 const getInitials = (firstName: string, lastName: string) =>
   `${firstName?.charAt(0) ?? ""}${lastName?.charAt(0) ?? ""}`.toUpperCase();
 
-export default function Dashboard() {
+export default function Dashboard({ isCompact }: DashboardProps) {
   const authContext = useContext(AuthContext);
   const [shipments, setShipments] = useState<TrackedShipment[]>([]);
   const [phoneNumbers, setPhoneNumbers] = useState<{
@@ -1269,8 +1271,8 @@ export default function Dashboard() {
   };
 
   const user = authContext?.user;
-  const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`;
-  const initials = getInitials(user?.firstName ?? "", user?.lastName ?? "");
+  // const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`;
+  // const initials = getInitials(user?.firstName ?? "", user?.lastName ?? "");
   const companies = user?.activeCustomers ?? [];
   const companyNames = companies.map((company) => company.customerName);
   const [searchText, setSearchText] = useState("");
@@ -1420,7 +1422,102 @@ export default function Dashboard() {
     ],
     []
   );
+  const ColumnsToSmallTable = useMemo(
+    () => [
+      {
+        field: "containerInfo",
+        headerName: "Container + BOL",
+        width: 220,
+        renderCell: (params: any) =>
+          `${params.row.containerNumber} | ${params.row.bol}`,
+      },
+      {
+        field: "path",
+        headerName: "Path",
+        width: 250,
+        renderCell: (params) => (
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <span style={{ fontWeight: "bold" }}>
+              {params.value.pol} → {params.value.pod}
+            </span>
+            <LinearProgress
+              variant="determinate"
+              value={params.value.progress}
+              sx={{ flexGrow: 1, height: "10px", borderRadius: "5px" }}
+            />
+            <span style={{ fontSize: "12px", fontWeight: "bold" }}>
+              {Math.round(params.value.progress)}%
+            </span>
+          </div>
+        ),
+      },
+      {
+        field: "latestCarrierETAOrATA",
+        headerName: "Latest Carrier ETA/ATA",
+        width: 180,
+        renderCell: (params) =>
+          formatEtaWithColor(params.value, params.row.statusInsights),
+      },
+      {
+        field: "maritimeAiPredictedETA",
+        headerName: "Maritime AI Predicted ETA",
+        width: 180,
+      },
+      {
+        field: "phoneNumber",
+        headerName: "Phone Number",
+        width: 300,
+        renderCell: (params) => {
+          const containerNumber = params.row.containerNumber;
+          const shipmentId = params.row.shipmentId;
+          const currentPhone = phoneNumbers[containerNumber]?.phone || "";
+          const editedPhone =
+            localPhoneNumbers[containerNumber] ?? currentPhone;
 
+          return (
+            <Box display="flex" gap={1} alignItems="center">
+              <TextField
+                variant="outlined"
+                size="small"
+                value={editedPhone}
+                onChange={(e) =>
+                  handleInputChange(containerNumber, e.target.value)
+                }
+                sx={{ width: "140px" }}
+              />
+              {currentPhone ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleUpdate(containerNumber)}
+                  disabled={!localPhoneNumbers[containerNumber]}
+                >
+                  Update
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={() => handleSave(containerNumber, shipmentId)}
+                  disabled={!localPhoneNumbers[containerNumber]}
+                >
+                  Save
+                </Button>
+              )}
+            </Box>
+          );
+        },
+      },
+    ],
+    []
+  );
   const handleFilterChange = (value: string, type: "insight" | "status") => {
     if (type === "insight") {
       setSelectedInsights((prev) =>
@@ -1861,7 +1958,7 @@ export default function Dashboard() {
 
   return (
     <Box sx={{ bgcolor: "#f4f6f8", minHeight: "100vh" }}>
-      <AppBar
+      {/* <AppBar
         position="static"
         sx={{ backgroundColor: "#1a237e", padding: "0.5rem" }}
       >
@@ -1879,7 +1976,7 @@ export default function Dashboard() {
           </Typography>
           <Avatar sx={{ bgcolor: "orange", ml: 2 }}>{initials}</Avatar>
         </Toolbar>
-      </AppBar>
+      </AppBar> */}
 
       <Container maxWidth="xl">
         <Box
@@ -2122,12 +2219,21 @@ export default function Dashboard() {
         <Paper sx={{ height: "70vh", width: "100%" }}>
           <DataGrid
             rows={filteredRows}
-            columns={columns}
+            columns={isCompact ? ColumnsToSmallTable : columns}
             pagination
             pageSizeOptions={[10, 25, 100]}
             initialState={{
               pagination: {
                 paginationModel: { pageSize: 10, page: 0 },
+              },
+            }}
+            sx={{
+              "& .MuiDataGrid-root": {
+                minHeight: isCompact ? "50vh" : "70vh",
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#f5f5f5",
+                fontWeight: "bold",
               },
             }}
             onRowClick={(params) => {
