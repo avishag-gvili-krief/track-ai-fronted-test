@@ -1,4 +1,3 @@
-
 // import React, { useContext, useEffect, useMemo, useState } from "react";
 // import { AuthContext } from "../context/AuthContext";
 // import {
@@ -698,12 +697,11 @@
 //     return flat;
 //   }, [filteredRows, expandedRows]);
 
-
 //   const mergedColumns = useMemo(
 //     () =>
 //       columns.map((col) => {
 //         const originalRenderCell = col.renderCell;
-  
+
 //         if (col.field === "containerNumber") {
 //           return {
 //             ...col,
@@ -720,7 +718,7 @@
 //             // Remove colSpan if it doesn't work in your setup
 //           };
 //         }
-  
+
 //         return {
 //           ...col,
 //           renderCell: (params: any) => {
@@ -733,7 +731,6 @@
 //       }),
 //     [columns]
 //   );
-  
 
 //   // Toggle expansion of a parent row by adding or removing its id from expandedRows.
 //   const handleRowClick = (params: any) => {
@@ -1081,9 +1078,8 @@
 //   );
 // }
 
+//table with row dont open
 
-//table with row dont open 
- 
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import {
@@ -1118,6 +1114,7 @@ import {
   updatePhoneNumber,
 } from "../api/containerService";
 import TrackingDetails from "../component/TrackingDetails";
+import { exportToExcel } from "../utils/exportToExcel";
 
 const formatDate = (dateString: string | undefined) => {
   if (!dateString) return "N/A";
@@ -1177,7 +1174,7 @@ interface TrackedShipment {
 const insightOptions = [
   "Arriving soon (1-3 days)",
   "Arrived",
-  "Tracking completed",
+  "Tracking Completed",
   "Rollover at POL",
   "Rollover at TSP",
   "Late departure",
@@ -1192,6 +1189,7 @@ const statusOptions = [
   "Early (1+ days)",
   "Significant delay (1-4 days)",
   "Critical delay (5+ days)",
+  "Tracking Completed",
 ];
 
 const getInitials = (firstName: string, lastName: string) =>
@@ -1264,6 +1262,10 @@ export default function Dashboard() {
       ...prev,
       [containerNumber]: { phone: newPhone, shipmentId },
     }));
+  };
+
+  const handleDownloadExcel = () => {
+    exportToExcel(columns, filteredRows, "ShipmentsData.xlsx");
   };
 
   const user = authContext?.user;
@@ -1615,6 +1617,8 @@ export default function Dashboard() {
           (item) => item.key === "Customer Code"
         )?.value || "N/A";
 
+      const pol = tracked.shipment.status?.pol?.properties || {};
+      const pod = tracked.shipment.status?.pod?.properties || {};
       return {
         id: tracked.shipment.id ?? index,
         containerNumber: tracked.shipment.containerNumber || "N/A",
@@ -1654,6 +1658,11 @@ export default function Dashboard() {
           pod: tracked.shipment.status?.pod?.properties?.locode || "N/A",
           progress: getPathProgress(tracked.shipment),
         },
+        //for Excel file
+        polLocode: pol.locode || "N/A",
+        polName: pol.name || "N/A",
+        podLocode: pod.locode || "N/A",
+        podName: pod.name || "N/A",
 
         containerStatus:
           tracked.shipment.status?.currentEvent?.description ||
@@ -1710,9 +1719,12 @@ export default function Dashboard() {
         customerNumber,
 
         statusInsights: (() => {
-          const init = tracked.shipment.initialCarrierETA;
-          const pred = tracked.shipment.status?.predicted?.datetime;
-          const diffDays = diffCarrierDays(init, pred);
+          // const init = tracked.shipment.initialCarrierETA;
+          // const pred = tracked.shipment.status?.predicted?.diffFromCarrierDays;
+          //todo consult with eyal if daydiff should be calclaued like so : (Maritime AI Predicted ETA - Initial Carrier ETA) or like so tracked.shipment.status?.predicted?.diffFromCarrierDays||0
+
+          const diffDays =
+            tracked.shipment.status?.predicted?.diffFromCarrierDays || 0;
 
           if (tracked.shipment.status?.voyageStatus === "trackingCompleted") {
             return "Tracking Completed";
@@ -1720,7 +1732,7 @@ export default function Dashboard() {
 
           if (diffDays === null) return "N/A";
 
-          if (diffDays === 0) {
+          if (diffDays == 0) {
             return "On Time";
           } else if (diffDays < 0) {
             return `Early (${Math.abs(diffDays)}+ days)`;
@@ -1781,10 +1793,11 @@ export default function Dashboard() {
         selectedInsights.includes(row.statusInsights)
       );
     }
-
     if (selectedStatuses.length > 0) {
       filtered = filtered.filter((row) =>
-        selectedStatuses.includes(row.containerStatus)
+        selectedStatuses.some((status) =>
+          row.statusInsights.startsWith(status.split("(")[0].trim())
+        )
       );
     }
 
@@ -2016,6 +2029,7 @@ export default function Dashboard() {
               textTransform: "none",
               "&:hover": { bgcolor: "#ff9800" },
             }}
+            onClick={handleDownloadExcel}
           >
             <CloudDownloadIcon />
           </Button>

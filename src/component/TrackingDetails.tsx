@@ -1,62 +1,83 @@
+// TrackingDetails.tsx
 import React from "react";
-import { DataGrid } from "@mui/x-data-grid";
 import { Box } from "@mui/material";
 
 interface Event {
-  id?: string | number;
-  description?: string | null;
-  location?: string | null;
-  vessel?: { name?: string | null } | null;
-  voyage?: string | null;
-  plannedAt?: string | null;
-  actualAt?: string | null;
+  description?: string;
+  location?: string;
+  vessel?: { name?: string };
+  voyage?: string;
+  plannedAt?: string;
+  actualAt?: string;
 }
 
-const showEventIconHandler = (description?: string | null) => {
-  const icons: Record<string, string> = {
-    "Empty to shipper": "/Empty_to_shipper.png",
-    "Gate in at first POL": "/Gate_in_POL.png",
-  };
-  return icons[description || ""] || "";
+const showEventIconHandler = (eventRecord: Event) => {
+  let imgAttr = { imgSrc: "", imgAlt: "" };
+  if (eventRecord.description === "Empty to shipper") {
+    imgAttr.imgSrc = "/Empty_to_shipper.png";
+    imgAttr.imgAlt = "Empty_to_shipper";
+  } else if (eventRecord.description === "Gate in at first POL") {
+    // ...
+  }
+  // ...  icon mapping ...
+  return imgAttr;
 };
 
-export default function TrackingDetails({ rowData }: { rowData: { events?: Event[] | null } }) {
-  const eventsWithIds = rowData.events?.map((event, index) => ({
-    id: event.id ?? index, // Ensure each row has an ID
-    description: event.description ?? "N/A",
-    location: event.location ?? "N/A",
-    vessel: event.vessel?.name ?? "N/A",
-    voyage: event.voyage ?? "N/A",
-    plannedAt: event.plannedAt ?? "N/A",
-    actualAt: event.actualAt ?? "N/A",
-  })) ?? [];
-
-  const columns = [
-    { field: "description", headerName: "Status", flex: 1 },
-    { field: "location", headerName: "Location", flex: 1 },
-    { field: "vessel", headerName: "Vessel", flex: 1 },
-    { field: "voyage", headerName: "Voyage", flex: 1 },
-    { field: "plannedAt", headerName: "Planned At", flex: 1 },
-    { field: "actualAt", headerName: "Actual At", flex: 1 },
+export default function TrackingDetails(
     {
-      field: "icon",
-      headerName: "Icon",
-      flex: 1,
-      renderCell: (params) => {
-        const imgSrc = showEventIconHandler(params.row.description);
-        return imgSrc ? <img src={imgSrc} alt="icon" width={24} /> : "—";
-      },
-    },
-  ];
-
+  rowData,
+}: {
+  rowData: any; 
+}) 
+{
+    console.log("TrackingDetails",rowData)
+  const events: Event[] = rowData.events || [];
   return (
-    <Box sx={{ height: 400, width: "100%", mt: 2 }}>
-      <DataGrid
-        rows={eventsWithIds}
-        columns={columns}
-        autoPageSize
-        disableRowSelectionOnClick
-      />
+    <Box
+      sx={{
+        mt: 2,
+        p: 2,
+        border: "1px solid #ccc",
+        borderRadius: 2,
+        backgroundColor: "#f9f9f9",
+      }}
+    >
+      <h4>Container Tracking for {rowData.containerNumber}</h4>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th style={{ textAlign: "left" }}>Status</th>
+            <th style={{ textAlign: "left" }}>Location</th>
+            <th style={{ textAlign: "left" }}>Vessel</th>
+            <th style={{ textAlign: "left" }}>Voyage</th>
+            <th style={{ textAlign: "left" }}>Planned / Actual At</th>
+            <th style={{ textAlign: "left" }}>Icon</th>
+          </tr>
+        </thead>
+        <tbody>
+          {events.map((event, index) => {
+            const { imgSrc, imgAlt } = showEventIconHandler(event);
+            return (
+              <tr key={index} style={{ borderBottom: "1px solid #ccc" }}>
+                <td>{event.description || "N/A"}</td>
+                <td>{event.location || "N/A"}</td>
+                <td>{event.vessel?.name || "N/A"}</td>
+                <td>{event.voyage || "N/A"}</td>
+                <td>
+                  {event.plannedAt || "N/A"} / {event.actualAt || "N/A"}
+                </td>
+                <td>
+                  {imgSrc ? (
+                    <img src={imgSrc} alt={imgAlt} width={24} />
+                  ) : (
+                    "—"
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </Box>
   );
 }
