@@ -1080,17 +1080,12 @@
 
 //table with row dont open
 
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import {
-  AppBar,
-  Toolbar,
   Typography,
-  Avatar,
   Container,
   Card,
-  CardContent,
-  Grid,
   TextField,
   Button,
   Select,
@@ -1098,7 +1093,6 @@ import {
   Paper,
   Box,
   LinearProgress,
-  Radio,
   Checkbox,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -1271,8 +1265,6 @@ export default function Dashboard({ isCompact }: DashboardProps) {
   };
 
   const user = authContext?.user;
-  // const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`;
-  // const initials = getInitials(user?.firstName ?? "", user?.lastName ?? "");
   const companies = user?.activeCustomers ?? [];
   const companyNames = companies.map((company) => company.customerName);
   const [searchText, setSearchText] = useState("");
@@ -1957,33 +1949,13 @@ export default function Dashboard({ isCompact }: DashboardProps) {
     shipmentStats.total ? (value / shipmentStats.total) * 100 : 0;
 
   return (
-    <Box sx={{ bgcolor: "#f4f6f8", minHeight: "100vh" }}>
-      {/* <AppBar
-        position="static"
-        sx={{ backgroundColor: "#1a237e", padding: "0.5rem" }}
-      >
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: "bold" }}>
-            <img
-              src="../../public/Krief-white-logo.png"
-              alt="Logo"
-              style={{ height: 40, marginRight: 10 }}
-            />
-          </Typography>
-          <Typography sx={{ mr: 2 }}>
-            {fullName} <br />
-            <Typography variant="caption">{companyDisplay}</Typography>
-          </Typography>
-          <Avatar sx={{ bgcolor: "orange", ml: 2 }}>{initials}</Avatar>
-        </Toolbar>
-      </AppBar> */}
-
+    // <Box sx={{ bgcolor: "#f4f6f8", minHeight: "100vh" }}>
       <Container maxWidth="xl">
         <Box
           display="flex"
           alignItems="center"
           justifyContent="space-between"
-          sx={{ my: 2, px: 2 }}
+          sx={{ my: 2, px: 2 ,mt:0}}
         >
           <TextField
             variant="outlined"
@@ -2254,6 +2226,6 @@ export default function Dashboard({ isCompact }: DashboardProps) {
           />
         )}
       </Container>
-    </Box>
+    // </Box>
   );
 }
