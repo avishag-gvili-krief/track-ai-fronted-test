@@ -26,6 +26,7 @@ import { AddCircleOutline, CloudUpload } from "@mui/icons-material";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useNavigate } from "react-router-dom";
 import { exportCompaniesToExcel } from "../utils/exportToExcelCompanes";
+import "../css/Login.css";
 
 export default function ManageCompany() {
   const navigate = useNavigate();

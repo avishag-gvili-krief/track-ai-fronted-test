@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserContext } from "../context/UserContext";
 import { validateEmail } from "../utils/validateEmail";
 import { AuthContext } from "../context/AuthContext";
+import "../css/Login.css";
 
 interface NewUserForm {
   firstName: string;
