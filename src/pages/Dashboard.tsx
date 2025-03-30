@@ -1,4 +1,3 @@
-
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import {
@@ -13,6 +12,7 @@ import {
   Box,
   LinearProgress,
   Checkbox,
+  IconButton,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -21,13 +21,13 @@ import { DataGrid } from "@mui/x-data-grid";
 import { format } from "date-fns";
 import { hasFlag } from "country-flag-icons";
 import Flags from "country-flag-icons/react/3x2";
-import {
-  fetchPhoneNumbers,
-  createPhoneNumber,
-  updatePhoneNumber,
-} from "../api/containerService";
+import PhoneEnabledIcon from "@mui/icons-material/PhoneEnabled";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import { Tooltip, Stack } from "@mui/material";
 import TrackingDetails from "../component/TrackingDetails";
 import { exportToExcel } from "../utils/exportToExcel";
+import TrackDialog from "../component/TrackDialog";
+import { useSmsContext } from "../context/SmsContext";
 
 const formatDate = (dateString: string | undefined) => {
   if (!dateString) return "N/A";
@@ -109,9 +109,10 @@ interface DashboardProps {
   onRowSelected?: (containerId: string | null) => void;
 }
 
-
-
-export default function Dashboard({ isCompact,onRowSelected }: DashboardProps) {
+export default function Dashboard({
+  isCompact,
+  onRowSelected,
+}: DashboardProps) {
   const authContext = useContext(AuthContext);
   const [shipments, setShipments] = useState<TrackedShipment[]>([]);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
@@ -121,9 +122,6 @@ export default function Dashboard({ isCompact,onRowSelected }: DashboardProps) {
       setShipments(authContext.user.winwordData.data.trackedShipments.data);
     }
   }, [authContext?.user]);
-
- 
-
 
   const handleDownloadExcel = () => {
     exportToExcel(columns, filteredRows, "ShipmentsData.xlsx");
@@ -137,6 +135,16 @@ export default function Dashboard({ isCompact,onRowSelected }: DashboardProps) {
   const [selectedInsights, setSelectedInsights] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
+  const { userPhones,fetchUserPhones } = useSmsContext();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedContainerId, setSelectedContainerId] = useState<string | null>(
+    null
+  );
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserPhones(user.id);
+    }
+  }, [user?.id]);
 
   const columns = useMemo(
     () => [
@@ -230,6 +238,51 @@ export default function Dashboard({ isCompact,onRowSelected }: DashboardProps) {
         field: "customerReference",
         headerName: "Customer Reference",
         width: 200,
+      },
+      {
+        field: "actions",
+        headerName: "",
+        width: 80,
+        sortable: false,
+        filterable: false,
+        renderCell: (params: any) => {
+          const sms = userPhones.find(
+            (s: { container: any; }) => s.container === params.row.containerNumber
+          );
+
+          const trackedEntry = sms?.userPhones.find(
+            (e: { userId: string | undefined; }) => e.userId === authContext?.user?.id
+          );
+
+          const isPhoneTracked = trackedEntry && trackedEntry.phones.length > 0;
+
+          return (
+            <Tooltip
+              title={
+                isPhoneTracked
+                  ? "Phone tracking is active"
+                  : "Track this container"
+              }
+            >
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedContainerId(params.row.containerNumber);
+                  setDialogOpen(true);
+                }}
+              >
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <PhoneEnabledIcon />
+                  {isPhoneTracked && (
+                    <FiberManualRecordIcon
+                      sx={{ fontSize: 10, color: "red" }}
+                    />
+                  )}
+                </Stack>
+              </IconButton>
+            </Tooltip>
+          );
+        },
       },
     ],
     []
@@ -488,7 +541,6 @@ export default function Dashboard({ isCompact,onRowSelected }: DashboardProps) {
         containerNumber: tracked.shipment.containerNumber || "N/A",
         bol: tracked.shipment.bol || "N/A",
         carrier: tracked.shipment.carrier?.shortName || "N/A",
-
         initialCarrierETD: tracked.shipment.initialCarrierETD
           ? formatDate(tracked.shipment.initialCarrierETD).toLocaleString()
           : "N/A",
@@ -979,7 +1031,7 @@ export default function Dashboard({ isCompact,onRowSelected }: DashboardProps) {
             },
           }}
           onRowClick={(params) => {
-            console.log(params.row.id)
+            console.log(params.row.id);
             const rowId = params.row.id;
             if (expandedRowId === rowId) {
               setExpandedRowId(null);
@@ -991,6 +1043,24 @@ export default function Dashboard({ isCompact,onRowSelected }: DashboardProps) {
           }}
         />
       </Paper>
+      {selectedContainerId && (
+        <TrackDialog
+          key={selectedContainerId}
+          open={dialogOpen}
+          onClose={() => {
+            setDialogOpen(false);
+            setSelectedContainerId(null);
+          }}
+          containerId={selectedContainerId}
+          userId={authContext?.user?.id ?? ""}
+          existingEntry={userPhones.find(
+            (s: { container: string; }) => s.container === selectedContainerId
+          )}
+          refresh={() => {
+            if (authContext?.user?.id) fetchUserPhones(authContext.user.id);
+          }}
+        />
+      )}
 
       {/* {expandedRowId && (
         <TrackingDetails

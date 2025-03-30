@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         role: data.role,
         firstName: data.firstName,
         lastName: data.lastName,
+        phone: data.phone,
         expiration: data.expiration,
         reminders: data.reminders ?? [],
         activeCustomers: data.activeCustomers ?? [],
@@ -74,6 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         firstName: data.firstName,
         lastName: data.lastName,
         expiration: data.expiration,
+        phone: data.phone,
         reminders: data.reminders ?? [],
         activeCustomers: data.activeCustomers ?? [],
         winwordData: Array.isArray(data.winwordData)

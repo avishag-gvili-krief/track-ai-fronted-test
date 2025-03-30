@@ -11,6 +11,7 @@ export interface User {
     firstName: string;
     lastName: string;
     expiration: string;
+    phone: string;
     reminders: string[];
     activeCustomers: CustomerDto[];
     winwordData?: any[];
@@ -25,7 +26,8 @@ export interface AuthResponse {
     id: string;
     firstName: string;
     lastName: string;
+    phone: string;
     reminders: string[];
     activeCustomers: CustomerDto[];
-    winwordData?:{}|null;
+    winwordData?: {} | null;
 }
