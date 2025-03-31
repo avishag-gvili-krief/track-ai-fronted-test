@@ -169,19 +169,17 @@ export default function TrackDialog({
                     </IconButton>
                   </Stack>
                 ))}
-
-                {/* Add button */}
-                <Button
-                  variant="text"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddPhone}
-                  sx={{ mt: 1 }}
-                >
-                  Add Phone
-                </Button>
               </Stack>
             </Collapse>
-
+            {/* Add button */}
+            <Button
+              variant="text"
+              startIcon={<AddIcon />}
+              onClick={handleAddPhone}
+              sx={{ mt: 1 }}
+            >
+              Add Phone
+            </Button>
             {/* Toggle expanded */}
             {phones.length > 1 && (
               <Button
@@ -199,7 +197,7 @@ export default function TrackDialog({
           <Button
             onClick={onClose}
             disabled={loading}
-            startIcon={<CloseIcon />}
+            // startIcon={<CloseIcon />}
           >
             Cancel
           </Button>
@@ -207,7 +205,7 @@ export default function TrackDialog({
             onClick={handleDelete}
             disabled={loading}
             color="error"
-            startIcon={<DeleteIcon />}
+            // startIcon={<DeleteIcon />}
           >
             Delete
           </Button>
@@ -215,7 +213,7 @@ export default function TrackDialog({
             onClick={handleSave}
             disabled={loading || phones.every((p) => !p.trim())}
             variant="contained"
-            startIcon={<CheckIcon />}
+            // startIcon={<CheckIcon />}
           >
             Save
           </Button>
