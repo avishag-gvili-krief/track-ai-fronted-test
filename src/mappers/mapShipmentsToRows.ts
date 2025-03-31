@@ -119,6 +119,7 @@ export function mapShipmentsToRows(
 
       customerNumber,
       statusInsights,
+      insights: statusInsights,
       differenceFromCarrierDays: diffDays,
       voyageStatus: latestStatus?.voyageStatus ?? "N/A",
       events: latestStatus?.events ?? [],

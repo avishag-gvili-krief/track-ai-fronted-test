@@ -38,7 +38,7 @@ export const WinwordProvider = ({
     customerCodes: string[]
   ) => {
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       const response = await axiosInstance.get<TrackedShipmentsResponse>(
         "/winword/filter",
         {

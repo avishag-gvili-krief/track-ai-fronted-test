@@ -1,19 +1,13 @@
 // 📁 File: src/component/FiltersPanel.tsx
 
 import React from "react";
-import {
-  Paper,
-  Typography,
-  MenuItem,
-  Checkbox,
-  Button,
-  Box,
-} from "@mui/material";
+import { Typography, MenuItem, Checkbox, Button, Box } from "@mui/material";
 import { insightOptions, statusOptions } from "../constants/filters";
 
 interface FiltersPanelProps {
   open: boolean;
   onClose: () => void;
+  onApplyFilters: () => void;
   selectedInsights: string[];
   selectedStatuses: string[];
   handleFilterChange: (value: string, type: "insight" | "status") => void;
@@ -29,6 +23,7 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
   selectedInsights,
   selectedStatuses,
   handleFilterChange,
+  onApplyFilters,
 }) => {
   if (!open) return null;
 
@@ -48,11 +43,11 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
       </Typography>
       {insightOptions.map((insight) => (
         <MenuItem
-          key={insight}
-          onClick={() => handleFilterChange(insight, "insight")}
+          key={insight.title}
+          onClick={() => handleFilterChange(insight.title, "insight")}
         >
-          <Checkbox checked={selectedInsights.includes(insight)} />
-          {insight}
+          <Checkbox checked={selectedInsights.includes(insight.title)} />
+          {insight.title}
         </MenuItem>
       ))}
 
@@ -74,9 +69,12 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
         color="warning"
         fullWidth
         sx={{ mt: 2 }}
-        onClick={onClose}
+        onClick={() => {
+          onApplyFilters(); 
+          onClose(); 
+        }}
       >
-        Close
+        Filter/Close
       </Button>
     </Box>
   );
