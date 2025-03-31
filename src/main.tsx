@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { CompanyProvider } from "./context/CompanyContext";
 import { UserProvider } from "./context/UserContext";
 import { SmsProvider } from "./context/SmsContext";
+import { WinwordProvider } from "./context/WinwordContext";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -12,7 +13,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <CompanyProvider>
         <UserProvider>
           <SmsProvider>
+          <WinwordProvider>
             <App />
+            </WinwordProvider>
           </SmsProvider>
         </UserProvider>
       </CompanyProvider>
