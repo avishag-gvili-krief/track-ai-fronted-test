@@ -1,4 +1,4 @@
-import { createContext, useState, useContext} from "react";
+import { createContext, useState, useContext } from "react";
 import axiosInstance from "../api/axiosInstance";
 import qs from "qs";
 import { useLoading } from "./LoadingContext";
@@ -13,45 +13,42 @@ interface TrackedShipmentsResponse {
 
 interface WinwordContextType {
   winwordData: TrackedShipmentsResponse | null;
-  filterShipmentsByFieldValue: (
-    field: string,
-    value: string,
+
+  filterShipmentsByMultipleFields: (
+    fields: string[],
+    values: string[],
     customerCodes: string[]
   ) => Promise<void>;
+
   resetWinwordData: () => void;
 }
 
 export const WinwordContext = createContext<WinwordContextType | null>(null);
 
-export const WinwordProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-  const [winwordData, setWinwordData] =
-    useState<TrackedShipmentsResponse | null>(null);
+export const WinwordProvider = ({ children }: { children: React.ReactNode }) => {
+  const [winwordData, setWinwordData] = useState<TrackedShipmentsResponse | null>(null);
   const { showLoading, hideLoading } = useLoading();
 
-  const filterShipmentsByFieldValue = async (
-    field: string,
-    value: string,
+  const filterShipmentsByMultipleFields = async (
+    fields: string[],
+    values: string[],
     customerCodes: string[]
   ) => {
     try {
       showLoading();
+
       const response = await axiosInstance.get<TrackedShipmentsResponse>(
         "/winword/filter",
         {
           params: {
-            field,
-            value,
+            fields,
+            values,
             customerCodes,
           },
           paramsSerializer: (params) =>
             qs.stringify(params, { arrayFormat: "repeat" }),
         }
       );
-      console.log("response.data", response.data);
 
       setWinwordData(response.data);
     } catch (error) {
@@ -69,7 +66,7 @@ export const WinwordProvider = ({
     <WinwordContext.Provider
       value={{
         winwordData,
-        filterShipmentsByFieldValue,
+        filterShipmentsByMultipleFields,
         resetWinwordData,
       }}
     >
