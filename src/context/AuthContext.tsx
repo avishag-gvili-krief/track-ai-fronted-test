@@ -1,8 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
 import { User } from "../types/AuthTypes";
-import { Backdrop } from "@mui/material";
-import "../css/Login.css";
+import { useLoading } from "../context/LoadingContext";
 
 interface AuthContextType {
   user: User | null;
@@ -15,6 +14,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUser = async () => {
     try {
+      showLoading();
       const { data } = await axiosInstance.get<User>("/auth/me");
       setUser({
         id: data.id,
@@ -50,19 +51,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Failed to fetch user", error);
       logout();
     } finally {
+      hideLoading();
       setIsInitialized(true);
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
+      showLoading();
       const { data } = await axiosInstance.post("/auth/login", {
         email,
         password,
       });
-
-      console.log("Response from server:", data);
-
       localStorage.setItem("token", data.token);
       axiosInstance.defaults.headers.common[
         "Authorization"
@@ -85,6 +85,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error("Login failed", error);
       throw new Error("Login failed");
+    } finally {
+      hideLoading();
     }
   };
 
@@ -97,15 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
-      <>
-        {}
-        <Backdrop open={!isInitialized} className="loading-backdrop">
-          <div className="loading-image"></div>
-        </Backdrop>
-
-        {}
-        <div className={isInitialized ? "" : "hide-content"}>{children}</div>
-      </>
-    </AuthContext.Provider>
+    {!isInitialized ? null : children}
+  </AuthContext.Provider>
   );
 };

@@ -226,11 +226,8 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     selectedCompanies,
     setSelectedCompanies,
     pendingInsights,
-    setPendingInsights,
     selectedInsights,
     selectedStatuses,
-    pendingStatuses,
-    setPendingStatuses,
     handlePendingFilterChange,
     applyPendingFilters, 
   } = useShipmentFilters();

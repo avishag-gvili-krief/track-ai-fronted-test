@@ -34,7 +34,6 @@ import { exportUsersToExcel } from "../utils/exportToExcelUsers";
 import { validateEmail } from "../utils/validateEmail";
 import PhoneInput from "react-phone-input-2";
 import { AuthContext } from "../context/AuthContext";
-import "../css/Login.css";
 
 export default function ManageUsers() {
   const navigate = useNavigate();

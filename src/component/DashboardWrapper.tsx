@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Backdrop, Box, IconButton, Tooltip } from "@mui/material";
+import { useEffect, useState } from "react";
+import {Box, IconButton, Tooltip } from "@mui/material";
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,6 +8,7 @@ import {
 } from "@mui/icons-material";
 import DashboardPage from "../pages/Dashboard";
 import MapIframe from "./MapIframe";
+import { useLoading } from "../context/LoadingContext";
 
 export default function DashboardWrapper() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -16,18 +17,27 @@ export default function DashboardWrapper() {
   );
   const [isMapFullScreen, setIsMapFullScreen] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
+
+  useEffect(() => {
+    if (isMapLoaded) {
+      hideLoading();
+    } else {
+      showLoading();
+    }
+  }, [isMapLoaded]);
 
   const toggleTable = () => {
     setIsExpanded((prev) => !prev);
     if (!isExpanded && isMapFullScreen) {
-      setIsMapFullScreen(false); 
+      setIsMapFullScreen(false);
     }
   };
 
   const toggleMapFull = () => {
     setIsMapFullScreen((prev) => !prev);
     if (!isMapFullScreen && isExpanded) {
-      setIsExpanded(false); 
+      setIsExpanded(false);
     }
   };
 
@@ -43,7 +53,6 @@ export default function DashboardWrapper() {
 
   return (
     <Box sx={{ position: "relative", height: "100vh", width: "100vw" }}>
-      {/* מפה */}
       <MapIframe
         containerId={selectedContainerId}
         isFull={isMapFullScreen}
@@ -107,7 +116,7 @@ export default function DashboardWrapper() {
             top: "50%",
             right: 0,
             transform: "translateY(-50%)",
-            zIndex: 9998, 
+            zIndex: 9998,
           }}
         >
           <Tooltip title="Small Table">
@@ -166,20 +175,6 @@ export default function DashboardWrapper() {
           />
         </Box>
       )}
-
-      <Backdrop
-        open={!isMapLoaded}
-        sx={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          zIndex: 9999,
-        }}
-      >
-        <div className="loading-image" />
-      </Backdrop>
     </Box>
   );
 }

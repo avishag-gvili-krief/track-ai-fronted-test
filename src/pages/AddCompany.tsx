@@ -10,7 +10,6 @@ import {
   Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import "../css/Login.css";
 
 export default function AddCompany() {
   const navigate = useNavigate();

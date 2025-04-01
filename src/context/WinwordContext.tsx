@@ -1,7 +1,7 @@
-import { createContext, useState, useContext, useEffect } from "react";
+import { createContext, useState, useContext} from "react";
 import axiosInstance from "../api/axiosInstance";
-import { Backdrop } from "@mui/material";
 import qs from "qs";
+import { useLoading } from "./LoadingContext";
 
 interface TrackedShipmentsResponse {
   data: {
@@ -30,7 +30,7 @@ export const WinwordProvider = ({
 }) => {
   const [winwordData, setWinwordData] =
     useState<TrackedShipmentsResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
 
   const filterShipmentsByFieldValue = async (
     field: string,
@@ -38,7 +38,7 @@ export const WinwordProvider = ({
     customerCodes: string[]
   ) => {
     try {
-      // setIsLoading(true);
+      showLoading();
       const response = await axiosInstance.get<TrackedShipmentsResponse>(
         "/winword/filter",
         {
@@ -57,7 +57,7 @@ export const WinwordProvider = ({
     } catch (error) {
       console.error("Failed to fetch filtered WIN data:", error);
     } finally {
-      setIsLoading(false);
+      hideLoading();
     }
   };
 
@@ -73,12 +73,7 @@ export const WinwordProvider = ({
         resetWinwordData,
       }}
     >
-      <>
-        <Backdrop open={isLoading} className="loading-backdrop">
-          <div className="loading-image" />
-        </Backdrop>
-        <div className={isLoading ? "hide-content" : ""}>{children}</div>
-      </>
+      {children}
     </WinwordContext.Provider>
   );
 };

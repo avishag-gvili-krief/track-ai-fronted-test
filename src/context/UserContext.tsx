@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState } from "react";
 import axios from "../api/axiosInstance";
+import { useLoading } from "./LoadingContext";
 
 interface User {
   id: string;
@@ -35,9 +36,11 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const { showLoading, hideLoading } = useLoading();
 
 
   const fetchUsers = async () => {
+    showLoading();
     try {
       const res = await axios.get("/Company/with-users");
       const companies = res.data;
@@ -74,23 +77,31 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUsers(aggregatedUsers);
     } catch (error) {
       console.error("Failed to fetch users with all their companies:", error);
+    }finally {
+      hideLoading();
     }
   };
 
   const updateUser = async (id: string, updatedUser: Partial<User>) => {
+    showLoading();
     try {
       await axios.put(`/User/${id}`, updatedUser);
       await fetchUsers();
     } catch (error) {
       console.error("Failed to update user:", error);
+    }finally {
+      hideLoading();
     }
   };
   const addUser = async (user: Partial<User>) => {
+    showLoading();
     try {
       await axios.post("/User", user);
       await fetchUsers();
     } catch (error) {
       console.error("Failed to add user:", error);
+    }finally {
+      hideLoading();
     }
   };
   

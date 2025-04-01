@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import axiosInstance from "../api/axiosInstance";
+import { useLoading } from "./LoadingContext";
 
 interface Company {
   id: string;
@@ -19,28 +20,37 @@ interface CompanyContextType {
 
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 
-export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [companies, setCompanies] = useState<Company[]>([]);
-
+  const { showLoading, hideLoading } = useLoading();
   const fetchCompanies = async () => {
+    showLoading();
     try {
       const response = await axiosInstance.get("/Company");
       setCompanies(response.data);
     } catch (error) {
       console.error("Error fetching companies:", error);
+    } finally {
+      hideLoading();
     }
   };
 
   const addCompany = async (company: Omit<Company, "id">) => {
+    showLoading();
     try {
       const response = await axiosInstance.post("/Company", company);
       setCompanies([...companies, response.data]);
     } catch (error) {
       console.error("Error adding company:", error);
+    } finally {
+      hideLoading();
     }
   };
 
   const updateCompany = async (id: string, company: Omit<Company, "id">) => {
+    showLoading();
     try {
       await axiosInstance.put(`/Company/${id}`, company);
       setCompanies(
@@ -48,24 +58,33 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
     } catch (error) {
       console.error("Error updating company:", error);
+    } finally {
+      hideLoading();
     }
   };
 
   const deleteCompany = async (id: string) => {
+    showLoading();
     try {
       await axiosInstance.delete(`/Company/${id}`);
       setCompanies(companies.filter((company) => company.id !== id));
     } catch (error) {
       console.error("Error deleting company:", error);
+    } finally {
+      hideLoading();
     }
   };
 
-  // useEffect(() => {
-  //   fetchCompanies();
-  // }, []);
-
   return (
-    <CompanyContext.Provider value={{ companies, fetchCompanies, addCompany, updateCompany, deleteCompany }}>
+    <CompanyContext.Provider
+      value={{
+        companies,
+        fetchCompanies,
+        addCompany,
+        updateCompany,
+        deleteCompany,
+      }}
+    >
       {children}
     </CompanyContext.Provider>
   );
