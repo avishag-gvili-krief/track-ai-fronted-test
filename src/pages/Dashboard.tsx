@@ -47,7 +47,7 @@ interface TrackingEvent {
 const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
   const { user } = useContext(AuthContext);
   const { userPhones, fetchUserPhones } = useSmsContext();
-  const { filterShipmentsByFieldValue, winwordData } = useWinwordContext();
+  const { filterShipmentsByMultipleFields, winwordData } = useWinwordContext();
 
   const [filterOpen, setFilterOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -205,11 +205,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
   const handleApplyFilters = () => {
     applyPendingFilters(); 
   
-    const selectedInsight = insightOptions.find((i) =>
+    const selectedFilters = insightOptions.filter((i) =>
       pendingInsights.includes(i.title)
     );
   
-    if (!selectedInsight || pendingInsights.length === 0) {
+    if (!selectedFilters.length) {
       if (user?.winwordData?.data?.trackedShipments?.data) {
         setShipments(user.winwordData.data.trackedShipments.data);
       }
@@ -219,17 +219,28 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
   
     if (!user?.activeCustomers) return;
   
-    const field = selectedInsight.field;
-    const value =
-      typeof selectedInsight.values !== "undefined"
-        ? Array.isArray(selectedInsight.values)
-          ? selectedInsight.values.join(",")
-          : selectedInsight.values
-        : JSON.stringify(selectedInsight.ranges);
+    const fields: string[] = [];
+    const values: string[] = [];
   
-    const customerCodes = filteredRows.map((r) => r.customerNumber);
-    filterShipmentsByFieldValue(field, value, customerCodes);
+    selectedFilters.forEach((opt) => {
+      if (Array.isArray(opt.values)) {
+        opt.values.forEach((val: string) => {
+          fields.push(opt.field);
+          values.push(val);
+        });
+      }
+      else if (typeof opt.values === "string") {
+        fields.push(opt.field);
+        values.push(opt.values);
+      }
+      else if (opt.ranges) {
+        console.warn("Range filters not supported yet in multi-filter GET");
+      }
+    });
   
+    const customerCodes = user.activeCustomers.map((c: { customerNumber: { toString: () => any; }; }) => c.customerNumber.toString());
+  
+    filterShipmentsByMultipleFields(fields, values, customerCodes);
     setFilterOpen(false);
   };
 
@@ -320,11 +331,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         onApplyFilters={handleApplyFilters}
       />
 
-      <Card sx={{ p: 2, bgcolor: "white", borderRadius: "12px", boxShadow: 2 }}>
+      <Card sx={{ p: 2, bgcolor: "white", borderRadius: "12px", boxShadow: 4 }}>
         <ShipmentStats stats={shipmentStats} statusColors={statusColors} />
       </Card>
 
-      <Box mt={3}>
+      <Box mt={3} >
         <DataGrid
           rows={combinedRows}
           columns={columns}

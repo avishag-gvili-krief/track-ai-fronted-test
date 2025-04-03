@@ -5,9 +5,9 @@ import Navbar from "../src/component/Navbar";
 
 export default function Layout() {
   return (
-    <Box sx={{ height: "100vh", width: "100vw" }}>
+    <Box>
       <Navbar />
-      <Box sx={{ marginTop: "90px", padding: "20px" }}>
+      <Box sx={{ marginTop: "70px", padding: "20px" }}>
         <Outlet /> 
       </Box>
     </Box>

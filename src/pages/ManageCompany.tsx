@@ -18,11 +18,8 @@ import {
   Select,
   MenuItem,
   Backdrop,
-  CircularProgress,
-  Snackbar,
-  Alert,
 } from "@mui/material";
-import { AddCircleOutline, CloudUpload } from "@mui/icons-material";
+import { AddCircleOutline} from "@mui/icons-material";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useNavigate } from "react-router-dom";
 import { exportCompaniesToExcel } from "../utils/exportToExcelCompanes";
@@ -32,11 +29,6 @@ export default function ManageCompany() {
   const { companies, fetchCompanies, updateCompany } = useCompanyContext();
   const didFetch = useRef(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -102,18 +94,8 @@ export default function ManageCompany() {
         isActive: selectedCompany.isActive,
       });
       setSelectedCompany(null);
-      setSnackbar({
-        open: true,
-        message: "Company updated successfully",
-        severity: "success",
-      });
     } catch (error) {
       console.error("Update failed:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to update company",
-        severity: "error",
-      });
     }
   };
 
@@ -319,20 +301,6 @@ export default function ManageCompany() {
           </Box>
         </Card>
       )}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

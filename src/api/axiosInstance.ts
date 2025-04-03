@@ -1,13 +1,13 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:57677/api'; 
+const API_BASE_URL = 'http://localhost:57677/api';
 
 const axiosInstance = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
-    withCredentials: true, 
+    withCredentials: true,
 });
 
 axiosInstance.interceptors.request.use(
@@ -23,13 +23,10 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
     (response) => response,
-    (error: { response: { status: number; }; }) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('token');
-            window.location.href = '/login'; 
-        }
+    (error) => {
         return Promise.reject(error);
     }
 );
+
 
 export default axiosInstance;

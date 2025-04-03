@@ -1,5 +1,5 @@
 // components/AddUserForm.tsx
-import React, { useContext, useState } from "react";
+import { useContext, useState } from "react";
 import {
   Box,
   Button,
@@ -13,8 +13,6 @@ import {
   Checkbox,
   Autocomplete,
   ListItemText,
-  Snackbar,
-  Alert,
 } from "@mui/material";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/material.css";
@@ -60,11 +58,7 @@ export default function AddUser() {
     companyIds: [],
     reminders: [],
   });
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
+
 
   const [errors, setErrors] = useState<{
     firstName?: string;
@@ -110,23 +104,10 @@ export default function AddUser() {
       });
 
       await fetchUsers();
-
-      setSnackbar({
-        open: true,
-        message: "User added successfully!",
-        severity: "success",
-      });
-
-      setTimeout(() => {
         navigate("/manage-users");
-      }, 1000);
     } catch (error) {
       console.error("Error adding user:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to add user. Please try again.",
-        severity: "error",
-      });
+
     }
   };
 
@@ -312,20 +293,6 @@ export default function AddUser() {
           </Button>
         </Box>
       </Card>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

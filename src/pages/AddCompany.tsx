@@ -1,14 +1,6 @@
 import React, { useState } from "react";
 import { useCompanyContext } from "../context/CompanyContext";
-import {
-  Box,
-  Typography,
-  Card,
-  TextField,
-  Button,
-  Snackbar,
-  Alert,
-} from "@mui/material";
+import { Box, Typography, Card, TextField, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 export default function AddCompany() {
@@ -20,15 +12,11 @@ export default function AddCompany() {
     customerName: "",
     taxNumber: "",
   });
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
 
   const [errors, setErrors] = useState({
     customerNumber: "",
     taxNumber: "",
+    customerName: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +33,7 @@ export default function AddCompany() {
 
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { customerNumber: "", taxNumber: "" };
+    const newErrors = { customerNumber: "", taxNumber: "", customerName: "" };
 
     // Validate customerNumber
     if (!/^\d{4,6}$/.test(newCompany.customerNumber)) {
@@ -60,6 +48,11 @@ export default function AddCompany() {
       isValid = false;
     }
 
+    // Validate customerName
+    if (newCompany.customerName == "") {
+      newErrors.customerName = "Customer name must";
+      isValid = false;
+    }
     setErrors(newErrors);
     return isValid;
   };
@@ -74,23 +67,9 @@ export default function AddCompany() {
         taxNumber: parseInt(newCompany.taxNumber),
         isActive: true,
       });
-
-      setSnackbar({
-        open: true,
-        message: "Company added successfully!",
-        severity: "success",
-      });
-
-      setTimeout(() => {
-        navigate("/manage-company");
-      }, 1000);
+      navigate("/manage-company");
     } catch (error) {
       console.error("Error adding company:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to add company. Please try again.",
-        severity: "error",
-      });
     }
   };
 
@@ -142,6 +121,8 @@ export default function AddCompany() {
               onChange={handleInputChange}
               variant="outlined"
               fullWidth
+              error={!!errors.customerName}
+              helperText={errors.customerName}
             />
           </Box>
 
@@ -192,20 +173,6 @@ export default function AddCompany() {
           </Button>
         </Box>
       </Card>
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

@@ -1,26 +1,3 @@
-// //  Constant options for filter select menus
-
-// export const insightOptions = [
-//     "Arriving soon (1-3 days)",
-//     "Arrived",
-//     "Tracking Completed",
-//     "Rollover at POL",
-//     "Rollover at TSP",
-//     "Late departure",
-//     "Transshipment delay",
-//     "Insufficient T/S time",
-//     "Routing deficiency",
-//     "Late allocation",
-//   ];
-  
-//   export const statusOptions = [
-//     "On Time",
-//     "Early (1+ days)",
-//     "Significant delay (1-4 days)",
-//     "Critical delay (5+ days)",
-//     "Tracking Completed",
-//   ];
-  
   //  Constant options for filter select menus
 import { addDays } from "date-fns";
 

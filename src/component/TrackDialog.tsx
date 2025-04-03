@@ -7,21 +7,15 @@ import {
   DialogActions,
   Button,
   IconButton,
-  TextField,
   Box,
-  Snackbar,
-  Alert,
   Stack,
-  Typography,
   Collapse,
 } from "@mui/material";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/material.css";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import AddIcon from "@mui/icons-material/Add";
-import CheckIcon from "@mui/icons-material/Check";
 import DeleteIcon from "@mui/icons-material/Delete";
-import CloseIcon from "@mui/icons-material/Close";
 import { useSmsContext, SmsDto } from "../context/SmsContext";
 
 interface TrackDialogProps {
@@ -45,35 +39,44 @@ export default function TrackDialog({
   const [phones, setPhones] = useState<string[]>([""]);
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
+  const [initialPhones, setInitialPhones] = useState<string[]>([]);
+  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (existingEntry && existingEntry.userPhones.length > 0) {
       const match = existingEntry.userPhones.find((e) => e.userId === userId);
-      if (match) setPhones(match.phones);
+      if (match) {
+        setPhones(match.phones);
+        setInitialPhones(match.phones);
+      }
     } else {
       setPhones([""]);
+      setInitialPhones([""]);
     }
   }, [existingEntry, userId]);
+
+  const checkIfDirty = (current: string[]) => {
+    return JSON.stringify(current) !== JSON.stringify(initialPhones);
+  };
 
   const handlePhoneChange = (index: number, value: string) => {
     const updated = [...phones];
     updated[index] = value;
     setPhones(updated);
+    setIsDirty(checkIfDirty(updated));
   };
 
   const handleAddPhone = () => {
-    setPhones([...phones, ""]);
+    const updated = [...phones, ""];
+    setPhones(updated);
+    setExpanded(true);
+    setIsDirty(checkIfDirty(updated));
   };
 
   const handleRemovePhone = (index: number) => {
     const updated = phones.filter((_, i) => i !== index);
     setPhones(updated);
+    setIsDirty(checkIfDirty(updated));
   };
 
   const handleSave = async () => {
@@ -81,15 +84,11 @@ export default function TrackDialog({
     setLoading(true);
     try {
       await addOrUpdatePhones(containerId, { userId, phones });
-      setSnackbar({
-        open: true,
-        message: "Saved successfully",
-        severity: "success",
-      });
+      setInitialPhones(phones);
+      setIsDirty(false);
       refresh();
       onClose();
     } catch {
-      setSnackbar({ open: true, message: "Failed to save", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -99,19 +98,9 @@ export default function TrackDialog({
     setLoading(true);
     try {
       await removePhones(containerId, userId);
-      setSnackbar({
-        open: true,
-        message: "Deleted successfully",
-        severity: "success",
-      });
       refresh();
       onClose();
     } catch {
-      setSnackbar({
-        open: true,
-        message: "Failed to delete",
-        severity: "error",
-      });
     } finally {
       setLoading(false);
     }
@@ -203,37 +192,20 @@ export default function TrackDialog({
           </Button>
           <Button
             onClick={handleDelete}
-            disabled={loading}
+            disabled={loading || phones.length === 0}
             color="error"
-            // startIcon={<DeleteIcon />}
           >
             Delete
           </Button>
           <Button
             onClick={handleSave}
-            disabled={loading || phones.every((p) => !p.trim())}
+            disabled={loading || !isDirty}
             variant="contained"
-            // startIcon={<CheckIcon />}
           >
             Save
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          severity={snackbar.severity}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </>
   );
 }

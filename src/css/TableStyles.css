@@ -1,0 +1,30 @@
+.tableScroll {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    /* שים כאן עיצוב גלילה וכד' */
+  }
+  
+  .tableRowHover {
+    cursor: pointer;
+    /* צבע רקע בהובר: */
+  }
+  .tableRowHover:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .smsInput {
+    font-size: 10px;
+    white-space: nowrap;
+    height: 30px;
+    padding: 5px;
+  }
+  
+  .phoneBtnStyleEnable {
+    /* עיצוב לכפתור השמירה - OK */
+    background-color: #1976d2;
+    color: #fff;
+    margin-left: 5px;
+  }
+  
+  /* ניתן להוסיף כאן classים נוספים */
+  

@@ -1,6 +1,6 @@
 // ManageUsers.tsx
 
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   Box,
   Typography,
@@ -22,11 +22,8 @@ import {
   Autocomplete,
   ListItemText,
   Backdrop,
-  CircularProgress,
-  Snackbar,
-  Alert,
 } from "@mui/material";
-import { AddCircleOutline, CloudUpload } from "@mui/icons-material";
+import { AddCircleOutline} from "@mui/icons-material";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useNavigate } from "react-router-dom";
 import { useUserContext } from "../context/UserContext";
@@ -44,11 +41,7 @@ export default function ManageUsers() {
   const auth = useContext(AuthContext);
   const isSuperAdmin = auth?.user?.role === 1;
   const [isLoading, setIsLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success" as "success" | "error",
-  });
+
 
   const defaultReminders = [
     "Sunday",
@@ -142,18 +135,8 @@ export default function ManageUsers() {
     try {
       await updateUser(selectedUser.id, updatedUser);
       setSelectedUser(null);
-      setSnackbar({
-        open: true,
-        message: "User updated successfully",
-        severity: "success",
-      });
     } catch (error) {
       console.error("Failed to update user", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to update user",
-        severity: "error",
-      });
     }
   };
 
@@ -447,20 +430,6 @@ export default function ManageUsers() {
           </Box>
         </Card>
       )}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={3000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

@@ -70,12 +70,12 @@ export default function Navbar() {
           <Typography variant="caption">{companyDisplay}</Typography>
         </Typography>
 
-        <Avatar
+        {user&&<Avatar
           sx={{ bgcolor: "orange", ml: 2, cursor: "pointer", mt: 1 }}
           onClick={handleAvatarClick}
         >
           {initials}
-        </Avatar>
+        </Avatar>}
 
         <Menu
           anchorEl={anchorEl}
