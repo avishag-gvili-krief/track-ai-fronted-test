@@ -151,11 +151,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         onApplyFilters={handleApplyFilters}
       />
 
-      <Card sx={{ p: 2, bgcolor: "white", borderRadius: "12px", boxShadow: 2 }}>
+      <Card sx={{ p: 2, bgcolor: "white", borderRadius: "12px", boxShadow: 4 }}>
         <ShipmentStats stats={shipmentStats} statusColors={statusColors} />
       </Card>
 
-      <Box mt={3}>
+      <Box mt={3} >
         <DataGrid
           rows={filteredRows}
           columns={columns}

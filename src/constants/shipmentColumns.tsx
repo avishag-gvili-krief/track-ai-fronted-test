@@ -149,7 +149,7 @@ export const getFullShipmentColumns = (
     filterable: false,
     renderCell: (params: any) => {
       const sms = userPhones.find((s) => s.container === params.row.containerNumber);
-      const trackedEntry = sms?.userPhones.find((e) => e.userId === userId);
+      const trackedEntry = sms?.userPhones.find((e: { userId: string; }) => e.userId === userId);
       const isPhoneTracked = trackedEntry && trackedEntry.phones.length > 0;
 
       return (

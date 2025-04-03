@@ -1,12 +1,33 @@
+// File: src/context/AuthContext.tsx
+
 import { createContext, useState, useEffect } from "react";
 import axiosInstance from "../api/axiosInstance";
 import { User } from "../types/AuthTypes";
-import { useLoading } from "../context/LoadingContext";
+import { useLoading } from "./LoadingContext";
+import { Snackbar, AlertColor } from "@mui/material";
+import React from "react";
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  fetchUser: () => Promise<void>;
+  sendResetPassword: (userId: string) => Promise<boolean>;
+  verifyTempPassword: (
+    userId: string,
+    tempPassword: string
+  ) => Promise<boolean>;
+  resetPassword: (
+    userId: string,
+    tempPassword: string,
+    newPassword: string
+  ) => Promise<boolean>;
+}
+
+interface ToastState {
+  open: boolean;
+  message: string;
+  severity: AlertColor;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -15,6 +36,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const { showLoading, hideLoading } = useLoading();
+  const [toast, setToast] = useState<ToastState>({
+    open: false,
+    message: "",
+    severity: "info",
+  });
+
+  const showToast = (message: string, severity: AlertColor = "info") => {
+    setToast({ open: true, message, severity });
+  };
+
+  const closeToast = () => setToast({ ...toast, open: false });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -33,6 +65,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       showLoading();
       const { data } = await axiosInstance.get<User>("/auth/me");
+
       setUser({
         id: data.id,
         email: data.email,
@@ -47,9 +80,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           ? { data: { trackedShipments: { data: data.winwordData } } }
           : data.winwordData,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch user", error);
-      logout();
+
+      if (!user && !isInitialized) {
+        logout();
+      } else {
+        showToast("Failed to refresh user info", "error");
+      }
     } finally {
       hideLoading();
       setIsInitialized(true);
@@ -97,9 +135,97 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     window.location.href = "/login";
   };
 
+  const sendResetPassword = async (userId: string) => {
+    try {
+      showLoading();
+      await axiosInstance.post("/auth/reset-password-request", userId);
+      showToast("Temporary password sent to your email", "success");
+      return true;
+    } catch {
+      showToast("Failed to send temporary password", "error");
+      return false;
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const verifyTempPassword = async (userId: string, tempPassword: string) => {
+    try {
+      showLoading();
+      await axiosInstance.post("/auth/verify-temp-password", {
+        userId,
+        tempPassword,
+      });
+      showToast("Identity verified", "success");
+      return true;
+    } catch {
+      showToast("Invalid or expired temporary password", "error");
+      return false;
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const resetPassword = async (
+    userId: string,
+    tempPassword: string,
+    newPassword: string
+  ) => {
+    try {
+      showLoading();
+      await axiosInstance.post("/auth/reset-password", {
+        userId,
+        tempPassword,
+        newPassword,
+      });
+      showToast("Password reset successfully", "success");
+      // await fetchUser();
+      return true;
+    } catch {
+      showToast("Password reset failed", "error");
+      return false;
+    } finally {
+      hideLoading();
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
-    {!isInitialized ? null : children}
-  </AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        fetchUser,
+        sendResetPassword,
+        verifyTempPassword,
+        resetPassword,
+      }}
+    >
+      {!isInitialized ? null : (
+        <>
+          {children}
+          <Snackbar
+            open={toast.open}
+            autoHideDuration={3000}
+            onClose={closeToast}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          >
+            <div style={{ padding: 0 }}>
+              <div
+                style={{
+                  backgroundColor:
+                    toast.severity === "success" ? "#4caf50" : "#f44336",
+                  color: "#fff",
+                  padding: "10px 20px",
+                  borderRadius: 4,
+                }}
+              >
+                {toast.message}
+              </div>
+            </div>
+          </Snackbar>
+        </>
+      )}
+    </AuthContext.Provider>
   );
 };

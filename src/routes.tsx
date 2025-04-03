@@ -8,10 +8,11 @@ import Login from "./pages/Login";
 import Layout from "./Layout";
 import ManageCompany from "./pages/ManageCompany";
 import ManageUsers from "./pages/ManageUsers";
-import ChangePassword from "./pages/ChangePassword";
+import ChangePassword from "./pages/ResetPassword";
 import DashboardWrapper from "./component/DashboardWrapper";
 import AddCompany from "./pages/AddCompany";
 import AddUser from "./pages/AddUser";
+import WindWrapperPage from "./pages/WindWrapperPage";
 
 const AppRoutes = () => {
   return (
@@ -20,7 +21,13 @@ const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
 
+      
+
         <Route path="/" element={<Layout />}>
+          <Route
+            path="external-tracking/:containerId"
+            element={<WindWrapperPage />}
+          />
           <Route path="dashboard" element={<DashboardWrapper />} />
           <Route path="manage-company" element={<ManageCompany />} />
           <Route path="manage-users" element={<ManageUsers />} />
