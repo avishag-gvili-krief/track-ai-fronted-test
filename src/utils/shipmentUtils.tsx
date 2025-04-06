@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { hasFlag } from "country-flag-icons";
 import Flags from "country-flag-icons/react/3x2";
-import React, { JSX } from "react";
+import { JSX } from "react";
 
 /** Safely escape special characters in regex */
 export function escapeRegExp(value: string): string {

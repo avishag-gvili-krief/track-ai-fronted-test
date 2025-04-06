@@ -34,6 +34,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
   const { userPhones, fetchUserPhones } = useSmsContext();
   const { filterShipmentsByMultipleFields, winwordData } = useWinwordContext();
   const [filterOpen, setFilterOpen] = useState(false);
+  const [userPageSize, setUserPageSize] = useState(10);
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedContainerId, setSelectedContainerId] = useState<string | null>(
     null
@@ -84,14 +89,24 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
 
   // Generate tracking details rows when a row is expanded
   useEffect(() => {
+    //check
     if (!expandedRowId) {
       setCombinedRows(filteredRows);
+      setPaginationModel((prev) => ({
+        ...prev,
+        pageSize: 25,
+      }));
       return;
     }
+    //
 
     const expandedRow = filteredRows.find((row) => row.id === expandedRowId);
-    if (!expandedRow) {
+    if (!expandedRowId) {
       setCombinedRows(filteredRows);
+      setPaginationModel((prev) => ({
+        ...prev,
+        pageSize: 25,
+      }));
       return;
     }
 
@@ -183,6 +198,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     console.log("newRows", newRows);
 
     setCombinedRows(newRows);
+    const extraRowsCount = newRows.length - filteredRows.length;
+    setPaginationModel((prev) => ({
+      ...prev,
+      pageSize: userPageSize + extraRowsCount,
+    }));
   }, [filteredRows, expandedRowId]);
 
   const shipmentStats = useMemo(
@@ -251,7 +271,10 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     ...col,
     renderCell: (params: GridRenderCellParams) => {
       if (params.row.isDetailRow) {
-        if (col.field === "containerNumber"||(isCompact&&col.field === "containerInfo")) {
+        if (
+          col.field === "containerNumber" ||
+          (isCompact && col.field === "containerInfo")
+        ) {
           return (
             <Box display="flex" alignItems="left" gap={1}>
               {params.row.icon?.imgSrc && (
@@ -270,7 +293,10 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
             </Box>
           );
         }
-        if (col.field === "carrier"||(isCompact&&col.field === "latestCarrierETAOrATA")) {
+        if (
+          col.field === "carrier" ||
+          (isCompact && col.field === "latestCarrierETAOrATA")
+        ) {
           const alwaysShowLocation =
             params.id.toString().endsWith("-header") ||
             params.row.id.includes("-detail-0") || // first row
@@ -321,7 +347,10 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
             </Typography>
           );
         }
-        if (col.field === "pol"||(isCompact&&col.field === "maritimeAiPredictedETA")) {
+        if (
+          col.field === "pol" ||
+          (isCompact && col.field === "maritimeAiPredictedETA")
+        ) {
           return (
             <Typography
               fontSize="13px"
@@ -371,15 +400,17 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         <ShipmentStats stats={shipmentStats} statusColors={statusColors} />
       </Card>
 
-      <Box mt={3} ref={gridContainerRef}>
+      <Box mt={3}  ref={gridContainerRef} sx={{ maxHeight: '70vh', overflowY: 'auto' }}>
         <DataGrid
           rows={combinedRows}
           columns={columns}
           pagination
-          pageSizeOptions={[10,25, 100]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10, page: 0 } },
+          paginationModel={paginationModel}
+          onPaginationModelChange={(newModel) => {
+            setPaginationModel(newModel);
+            setUserPageSize(newModel.pageSize);
           }}
+          pageSizeOptions={[10, 25, 100]}
           onRowClick={handleRowClick}
           getRowClassName={(params) => {
             if (params.row.isDetailRow) {

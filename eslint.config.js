@@ -19,10 +19,29 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        vars: 'all',
+        args: 'none',
+        ignoreRestSiblings: true,
+        varsIgnorePattern: '^React$|^_',
+      }],
+
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
     },
-  },
+
+ 
+    overrides: [
+      {
+        files: ['./*'],
+        rules: {
+          'react/prop-types': 'off',
+        },
+      },
+    ],
+  }
 )
