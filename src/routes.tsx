@@ -23,7 +23,7 @@ const AppRoutes = () => {
 
       
 
-        <Route path="/" element={<Layout />}>
+        <Route path="" element={<Layout />}>
           <Route
             path="external-tracking/:containerId"
             element={<WindWrapperPage />}

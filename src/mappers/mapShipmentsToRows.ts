@@ -34,14 +34,14 @@ export function mapShipmentsToRows(
       latestStatus?.voyageStatus === "trackingCompleted"
         ? "Tracking Completed"
         : diffDays === null
-        ? "N/A"
-        : diffDays === 0
-        ? "On Time"
-        : diffDays < 0
-        ? `Early (${Math.abs(diffDays)}+ days)`
-        : diffDays <= 4
-        ? `Significant delay (${diffDays} days)`
-        : `Critical delay (${diffDays}+ days)`;
+          ? "N/A"
+          : diffDays === 0
+            ? "On Time"
+            : diffDays < 0
+              ? `Early (${Math.abs(diffDays)}+ days)`
+              : diffDays <= 4
+                ? `Significant delay (${diffDays} days)`
+                : `Critical delay (${diffDays}+ days)`;
 
     return {
       id: tracked.shipment.id ?? index,
@@ -56,8 +56,8 @@ export function mapShipmentsToRows(
       latestCarrierETDOrATD: latestStatus?.actualDepartureAt
         ? formatDate(latestStatus.actualDepartureAt)
         : latestStatus?.estimatedDepartureAt
-        ? formatDate(latestStatus.estimatedDepartureAt)
-        : "N/A",
+          ? formatDate(latestStatus.estimatedDepartureAt)
+          : "N/A",
 
       pol: tracked.shipment.status?.pol
         ? getPortWithFlag(pol.locode, pol.name)
@@ -90,8 +90,8 @@ export function mapShipmentsToRows(
       latestCarrierETAOrATA: latestStatus?.actualArrivalAt
         ? formatDate(latestStatus.actualArrivalAt)
         : latestStatus?.estimatedArrivalAt
-        ? formatDate(latestStatus.estimatedArrivalAt)
-        : "N/A",
+          ? formatDate(latestStatus.estimatedArrivalAt)
+          : "N/A",
 
       maritimeAiPredictedETA: latestStatus?.predicted?.datetime
         ? formatDate(latestStatus.predicted.datetime)
@@ -123,6 +123,9 @@ export function mapShipmentsToRows(
       differenceFromCarrierDays: diffDays,
       voyageStatus: latestStatus?.voyageStatus ?? "N/A",
       events: latestStatus?.events ?? [],
+      currentEventIndex: latestStatus?.events?.findIndex(
+        (e) => e.description === latestStatus?.currentEvent?.description
+      ) ?? -1,
     };
   });
 }

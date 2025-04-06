@@ -1,7 +1,10 @@
 // 📁 File: src/constants/shipmentColumns.ts
 
 import { GridColDef } from "@mui/x-data-grid";
-import { formatEtaWithColor, formatStatusInsights } from "../utils/shipmentUtils";
+import {
+  formatEtaWithColor,
+  formatStatusInsights,
+} from "../utils/shipmentUtils";
 import { LinearProgress, Stack, IconButton, Tooltip } from "@mui/material";
 import PhoneEnabledIcon from "@mui/icons-material/PhoneEnabled";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
@@ -76,7 +79,11 @@ export const getFullShipmentColumns = (
   { field: "bol", headerName: "BOL", width: 160 },
   { field: "carrier", headerName: "Latest Carrier", width: 140 },
   { field: "initialCarrierETD", headerName: "Initial Carrier ETD", width: 180 },
-  { field: "latestCarrierETDOrATD", headerName: "Latest Carrier ETD/ATD", width: 180 },
+  {
+    field: "latestCarrierETDOrATD",
+    headerName: "Latest Carrier ETD/ATD",
+    width: 180,
+  },
   {
     field: "pol",
     headerName: "POL",
@@ -141,6 +148,13 @@ export const getFullShipmentColumns = (
   { field: "supplierName", headerName: "Supplier Name", width: 220 },
   { field: "consigneeAddress", headerName: "Consignee Address", width: 220 },
   { field: "customerReference", headerName: "Customer Reference", width: 200 },
+  //////////////////////////////////////
+  // { field: "description", headerName: "Status", width: 200 },
+  // { field: "location", headerName: "Location", width: 200 },
+  // { field: "vessel", headerName: "Vessel", width: 200 },
+  // { field: "voyage", headerName: "Voyage", width: 160 },
+  // { field: "timeInfo", headerName: "Planned / Actual At", width: 200 },
+  //////////////////////////////////////
   {
     field: "actions",
     headerName: "",
@@ -148,13 +162,19 @@ export const getFullShipmentColumns = (
     sortable: false,
     filterable: false,
     renderCell: (params: any) => {
-      const sms = userPhones.find((s) => s.container === params.row.containerNumber);
-      const trackedEntry = sms?.userPhones.find((e: { userId: string; }) => e.userId === userId);
+      const sms = userPhones.find(
+        (s) => s.container === params.row.containerNumber
+      );
+      const trackedEntry = sms?.userPhones.find(
+        (e: { userId: string }) => e.userId === userId
+      );
       const isPhoneTracked = trackedEntry && trackedEntry.phones.length > 0;
 
       return (
         <Tooltip
-          title={isPhoneTracked ? "Phone tracking is active" : "Track this container"}
+          title={
+            isPhoneTracked ? "Phone tracking is active" : "Track this container"
+          }
         >
           <IconButton
             onClick={(e) => {
@@ -165,7 +185,9 @@ export const getFullShipmentColumns = (
           >
             <Stack direction="row" spacing={0.5} alignItems="center">
               <PhoneEnabledIcon />
-              {isPhoneTracked && <FiberManualRecordIcon sx={{ fontSize: 10, color: "red" }} />}
+              {isPhoneTracked && (
+                <FiberManualRecordIcon sx={{ fontSize: 10, color: "red" }} />
+              )}
             </Stack>
           </IconButton>
         </Tooltip>

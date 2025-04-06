@@ -11,7 +11,7 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import "../css/Login.css"
+import "../css/Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -46,7 +46,11 @@ const Login = () => {
     <div className="login-container">
       {loading ? (
         <div className="loading-container">
-          <img src="../../public/loading.gif" alt="Loading..." className="loading-image" />
+          <img
+            src="../../public/loading.gif"
+            alt="Loading..."
+            className="loading-image"
+          />
         </div>
       ) : (
         <Container maxWidth="xs" className="login-box">
@@ -98,7 +102,17 @@ const Login = () => {
               >
                 Sign In
               </Button>
-              <Typography variant="body2" className="forgot-password">
+              <Typography
+                variant="body2"
+                className="forgot-password"
+                sx={{
+                  mt: 2,
+                  cursor: "pointer",
+                  textAlign: "center",
+                  textDecoration: "underline",
+                }}
+                onClick={() => navigate("/change-password")}
+              >
                 Forgot Password?
               </Typography>
             </form>
