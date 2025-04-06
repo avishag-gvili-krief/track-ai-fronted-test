@@ -29,27 +29,10 @@ interface DashboardProps {
   onRowSelected?: (containerId: string | null) => void;
 }
 
-interface TrackingEvent {
-  id: string;
-  description?: string;
-  location?: string;
-  vessel?: { name?: string };
-  vesselName?: string;
-  voyage?: string;
-  plannedAt?: string;
-  actualAt?: string;
-  timeInfo?: string;
-  icon?: { imgSrc: string; imgAlt: string };
-  parentId?: string;
-  isDetailRow?: boolean;
-}
-
 const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
   const { user } = useContext(AuthContext);
   const { userPhones, fetchUserPhones } = useSmsContext();
   const { filterShipmentsByMultipleFields, winwordData } = useWinwordContext();
-  const [pageSize, setPageSize] = useState(10);
-  const defaultPageSize = 10;
   const [filterOpen, setFilterOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedContainerId, setSelectedContainerId] = useState<string | null>(
@@ -144,10 +127,6 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         vessel: event.vessel?.name || "N/A",
         voyage: event.voyage || "N/A",
         timeInfo: formatDate(event.timestamps?.datetime),
-        // actualAt: formatDate(event.timestamps?.datetimeLocalized),
-        // timeInfo: `${formatDate(event.timestamps?.datetime)} / ${formatDate(
-        //   event.timestamps?.datetimeLocalized
-        // )}`,
         icon: { imgSrc, imgAlt },
         parentId: expandedRowId,
         isDetailRow: true,
@@ -179,8 +158,6 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
           vessel: "", // Support both field names
           voyage: "",
           timeInfo: "",
-          // plannedAt: "",
-          // actualAt: "",
           icon: { imgSrc: "", imgAlt: "" },
           parentId: expandedRowId,
           isDetailRow: true,
@@ -274,7 +251,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     ...col,
     renderCell: (params: GridRenderCellParams) => {
       if (params.row.isDetailRow) {
-        if (col.field === "containerNumber") {
+        if (col.field === "containerNumber"||(isCompact&&col.field === "containerInfo")) {
           return (
             <Box display="flex" alignItems="left" gap={1}>
               {params.row.icon?.imgSrc && (
@@ -287,16 +264,13 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
               <Typography
                 fontSize="13px"
                 sx={{ textAlign: "left", width: "100%" }}
-                // fontWeight={
-                //   params.id.toString().endsWith("-header") ? "bold" : "normal"
-                // }
               >
                 {params.row.description}
               </Typography>
             </Box>
           );
         }
-        if (col.field === "carrier") {
+        if (col.field === "carrier"||(isCompact&&col.field === "latestCarrierETAOrATA")) {
           const alwaysShowLocation =
             params.id.toString().endsWith("-header") ||
             params.row.id.includes("-detail-0") || // first row
@@ -347,7 +321,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
             </Typography>
           );
         }
-        if (col.field === "pol") {
+        if (col.field === "pol"||(isCompact&&col.field === "maritimeAiPredictedETA")) {
           return (
             <Typography
               fontSize="13px"
@@ -373,15 +347,6 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     } else {
       setExpandedRowId(rowId);
       onRowSelected?.(params.row.id);
-
-      setTimeout(() => {
-        const gridScroller = gridContainerRef.current?.querySelector(
-          ".MuiDataGrid-virtualScroller"
-        );
-        if (gridScroller) {
-          gridScroller.scrollLeft = 0;
-        }
-      }, 50);
     }
   };
 
@@ -411,7 +376,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
           rows={combinedRows}
           columns={columns}
           pagination
-          pageSizeOptions={[10, 25, 100]}
+          pageSizeOptions={[10,25, 100]}
           initialState={{
             pagination: { paginationModel: { pageSize: 10, page: 0 } },
           }}
