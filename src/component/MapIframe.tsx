@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect} from "react";
 import { Box } from "@mui/material";
 
 interface MapIframeProps {
@@ -14,10 +14,15 @@ export default function MapIframe({
   isCompact = false,
   onLoadChange,
 }: MapIframeProps) {
-  const src = containerId
-    ? `http://localhost:57677/blazor/mapbox/${containerId}`
-    : `http://localhost:57677/blazor/mapbox`;
 
+  // const MAPBOX_BASE_URL = __BLAZOR_MAPBOX_URL__;
+  // const src = containerId
+  //   ? `${MAPBOX_BASE_URL}/${containerId}`
+  //   : MAPBOX_BASE_URL;
+  const src = containerId
+      ? `http://192.168.171.30:57677/blazor/mapbox/${containerId}`
+      : `http://192.168.171.30:57677/blazor/mapbox`;
+  
   useEffect(() => {
     onLoadChange?.(false); // reset loading on URL change
   }, [src]);

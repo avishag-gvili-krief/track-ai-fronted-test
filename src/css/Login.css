@@ -2,11 +2,19 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh; /* עדיף מ-height */
-  overflow: hidden; /* מונע גלילה פנימית */
-  background: url("/loginBackground.jpg") no-repeat top center;
-  background-size: 100vw auto; /* גובה אוטומטי, רוחב מותאם */
-  background-attachment: fixed;
+  min-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: url("/loginBackground.jpg") no-repeat center center fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
 }
 
 .login-box {

@@ -9,8 +9,10 @@ import {
 import DashboardPage from "../pages/Dashboard";
 import MapIframe from "./MapIframe";
 import { useLoading } from "../context/LoadingContext";
+import { useWinwordContext } from "../context/WinwordContext";
 
 export default function DashboardWrapper() {
+  const { resetWinwordData } = useWinwordContext();
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedContainerId, setSelectedContainerId] = useState<string | null>(
     null

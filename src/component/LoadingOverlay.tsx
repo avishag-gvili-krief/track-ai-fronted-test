@@ -1,4 +1,3 @@
-import React from 'react';
 import { useLoading } from '../context/LoadingContext';
 import '../css/LoadingOverlay.css'; 
 
@@ -9,11 +8,14 @@ export default function LoadingOverlay() {
 
   return (
     <div className="loading-overlay-container">
-      <img 
-        src="/loading.gif" 
-        alt="Loading..." 
-        className="loading-spinner"
-      />
+      <div className="loading-blur-layer" />
+      <div className="loading-spinner-wrapper">
+        <img 
+          src="/loading.gif" 
+          alt="Loading..." 
+          className="loading-spinner"
+        />
+      </div>
     </div>
   );
 }

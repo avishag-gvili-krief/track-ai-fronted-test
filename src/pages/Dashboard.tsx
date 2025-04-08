@@ -46,6 +46,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
   const [shipments, setShipments] = useState<any[]>([]);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const [combinedRows, setCombinedRows] = useState<GridRowsProp>([]);
+  const [isFiltered, setIsFiltered] = useState(false);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const {
     searchText,
@@ -60,12 +61,15 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
   } = useShipmentFilters();
 
   useEffect(() => {
-    if (winwordData?.data?.trackedShipments?.data) {
+    if (!isFiltered) {
+      if (user?.winwordData?.data?.trackedShipments?.data) {
+        setShipments(user.winwordData.data.trackedShipments.data);
+      }
+    } else if (winwordData?.data?.trackedShipments?.data) {
       setShipments(winwordData.data.trackedShipments.data);
-    } else if (user?.winwordData?.data?.trackedShipments?.data) {
-      setShipments(user.winwordData.data.trackedShipments.data);
     }
-  }, [winwordData, user]);
+  }, [winwordData, user, isFiltered]);
+  
 
   useEffect(() => {
     if (user?.id) fetchUserPhones(user.id);
@@ -216,24 +220,26 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
 
   const handleApplyFilters = () => {
     applyPendingFilters();
-
+  
     const selectedFilters = insightOptions.filter((i) =>
       pendingInsights.includes(i.title)
     );
-
+  
+    // אם אין פילטרים - הצג את הנתונים המקוריים
     if (!selectedFilters.length) {
+      setIsFiltered(false); // ← מונע מה־Context להשפיע
       if (user?.winwordData?.data?.trackedShipments?.data) {
         setShipments(user.winwordData.data.trackedShipments.data);
       }
       setFilterOpen(false);
       return;
     }
-
+  
     if (!user?.activeCustomers) return;
-
+  
     const fields: string[] = [];
     const values: string[] = [];
-
+  
     selectedFilters.forEach((opt) => {
       if (Array.isArray(opt.values)) {
         opt.values.forEach((val: string) => {
@@ -247,15 +253,18 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         console.warn("Range filters not supported yet in multi-filter GET");
       }
     });
-
-    const customerCodes = user.activeCustomers.map(
-      (c: { customerNumber: { toString: () => any } }) =>
-        c.customerNumber.toString()
+  
+    const customerCodes = user.activeCustomers.map((c: { customerNumber: { toString: () => any; }; }) =>
+      c.customerNumber.toString()
     );
-
-    filterShipmentsByMultipleFields(fields, values, customerCodes);
+  
+    filterShipmentsByMultipleFields(fields, values, customerCodes).then(() => {
+      setIsFiltered(true); 
+    });
+  
     setFilterOpen(false);
   };
+  
 
   // Get the base columns from your hook
   const baseColumns = useShipmentColumns(
