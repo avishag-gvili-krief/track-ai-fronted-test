@@ -59,7 +59,7 @@ export default function Navbar() {
           sx={{ flexGrow: 1, fontWeight: "bold", mt: 1 }}
         >
           <img
-            src="../../public/Krief-white-logo.png"
+            src="/Krief-white-logo.png"
             alt="Logo"
             style={{ height: 40, marginRight: 10 }}
           />

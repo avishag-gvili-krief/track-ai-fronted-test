@@ -32,7 +32,10 @@ interface Props {
   setSelectedCompanies: (companies: string[]) => void;
   pendingInsights: string[];
   pendingStatuses: string[];
-  handlePendingFilterChange: (value: string, type: "insight" | "status") => void;
+  handlePendingFilterChange: (
+    value: string,
+    type: "insight" | "status"
+  ) => void;
   handleDownloadExcel: () => void;
   companies: Company[];
   onApplyFilters: () => void;
@@ -55,23 +58,34 @@ const DashboardToolbar: React.FC<Props> = ({
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
   const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(anchorEl ? null : event.currentTarget);
-    setFilterOpen(!filterOpen);
+    if (!filterOpen) {
+      setAnchorEl(event.currentTarget);
+      setFilterOpen(true);
+    } else {
+      setFilterOpen(false);
+    }
   };
 
   const handleClickAway = () => {
     setFilterOpen(false);
-    setAnchorEl(null);
+    // setAnchorEl(null);
   };
 
   return (
-    <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ my: 2 }}>
+    <Box
+      display="flex"
+      alignItems="center"
+      justifyContent="space-between"
+      sx={{ my: 2 }}
+    >
       <TextField
         variant="outlined"
         placeholder="Search in list"
         value={searchText}
         onChange={(e) => requestSearch(e.target.value)}
-        InputProps={{ startAdornment: <SearchIcon sx={{ color: "gray", mr: 1 }} /> }}
+        InputProps={{
+          startAdornment: <SearchIcon sx={{ color: "gray", mr: 1 }} />,
+        }}
         sx={{ width: 250, bgcolor: "white", borderRadius: "4px" }}
       />
 
@@ -80,7 +94,13 @@ const DashboardToolbar: React.FC<Props> = ({
           variant="outlined"
           startIcon={<FilterListIcon />}
           onClick={handleFilterClick}
-          sx={{ mx: 1, bgcolor: "white", borderRadius: "8px", fontWeight: 600, textTransform: "none" }}
+          sx={{
+            mx: 1,
+            bgcolor: "white",
+            borderRadius: "8px",
+            fontWeight: 600,
+            textTransform: "none",
+          }}
         >
           Filter
         </Button>
@@ -111,7 +131,7 @@ const DashboardToolbar: React.FC<Props> = ({
                 selectedInsights={pendingInsights}
                 selectedStatuses={pendingStatuses}
                 handleFilterChange={handlePendingFilterChange}
-                onApplyFilters={onApplyFilters} 
+                onApplyFilters={onApplyFilters}
               />
             </Paper>
           </ClickAwayListener>
@@ -120,31 +140,51 @@ const DashboardToolbar: React.FC<Props> = ({
 
       <Select
         multiple
+        displayEmpty
         value={selectedCompanies}
         onChange={(e) => {
           const value = e.target.value;
-          setSelectedCompanies(typeof value === "string" ? value.split(",") : value);
+          const selected = typeof value === "string" ? value.split(",") : value;
+          setSelectedCompanies(selected);
+          onApplyFilters();
         }}
-        renderValue={(selected) =>
-          selected.length === 0
-            ? "Select Company"
-            : companies
-                .filter((c) => selected.includes(c.customerNumber.toString()))
-                .map((c) => c.customerName)
-                .join(", ")
-        }
-        sx={{ minWidth: 250, bgcolor: "white", borderRadius: "4px" }}
+        renderValue={(selected) => {
+          if (selected.length === 0) {
+            return <em style={{ color: "#999" }}>Select Company</em>;
+          }
+
+          const selectedNames = companies
+            .filter((c) => selected.includes(c.customerNumber.toString()))
+            .map((c) => c.customerName);
+
+          return selectedNames.join(", ");
+        }}
+        sx={{
+          minWidth: 300,
+          bgcolor: "white",
+          borderRadius: "4px",
+          fontWeight: 500,
+        }}
       >
-        {companies.map((company) => (
-          <MenuItem key={company.id} value={company.customerNumber.toString()}>
-            <Checkbox checked={selectedCompanies.includes(company.customerNumber.toString())} />
-            {company.customerName}
-          </MenuItem>
-        ))}
+        {companies.map((company) => {
+          const customerNum = company.customerNumber.toString();
+          return (
+            <MenuItem key={company.id} value={customerNum}>
+              <Checkbox checked={selectedCompanies.includes(customerNum)} />
+              {company.customerName}
+            </MenuItem>
+          );
+        })}
       </Select>
 
       <Button
-        sx={{ ml: 1, bgcolor: "orange", color: "white", fontWeight: "bold", textTransform: "none" }}
+        sx={{
+          ml: 1,
+          bgcolor: "orange",
+          color: "white",
+          fontWeight: "bold",
+          textTransform: "none",
+        }}
         onClick={handleDownloadExcel}
       >
         <CloudDownloadIcon />
