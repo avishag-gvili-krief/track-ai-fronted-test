@@ -113,7 +113,7 @@ export default function Navbar() {
             Dashboard
           </MenuItem>
 
-          {isSuperAdmin || isAdmin&& (
+          {(isAdmin || isSuperAdmin) && (
             <MenuItem onClick={() => handleNavigate("/manage-company")}>
               <ListItemIcon>
                 <Business fontSize="small" />

@@ -23,7 +23,7 @@ import {
   ListItemText,
   Backdrop,
 } from "@mui/material";
-import { AddCircleOutline} from "@mui/icons-material";
+import { AddCircleOutline } from "@mui/icons-material";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useNavigate } from "react-router-dom";
 import { useUserContext } from "../context/UserContext";
@@ -41,7 +41,6 @@ export default function ManageUsers() {
   const auth = useContext(AuthContext);
   const isSuperAdmin = auth?.user?.role === 1;
   const [isLoading, setIsLoading] = useState(true);
-
 
   const defaultReminders = [
     "Sunday",
@@ -118,21 +117,27 @@ export default function ManageUsers() {
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
-
+    console.log("selectedUser.userType ", selectedUser.userType);
     const updatedUser = {
       id: selectedUser.id,
       firstName: selectedUser.firstName,
       lastName: selectedUser.lastName,
       email: selectedUser.email,
-      phoneNumber: selectedUser.phoneNumber,
+      Phone: selectedUser.phoneNumber,
       password: selectedUser.password || undefined,
-      userType: selectedUser.userType,
-      status: selectedUser.status,
+      role:
+        selectedUser.userType == "Super Admin"
+          ? 1
+          : selectedUser.userType == "Standard"
+          ? 2
+          : 3,
+      IsActive: selectedUser.status,
       reminders: selectedUser.reminders || [],
       companyIds: selectedUser.companyIds || [],
     };
 
     try {
+      console.log("updatedUser ", updatedUser);
       await updateUser(selectedUser.id, updatedUser);
       setSelectedUser(null);
     } catch (error) {
@@ -302,6 +307,22 @@ export default function ManageUsers() {
               error={!!errors.email}
               helperText={errors.email}
             />
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                name="status"
+                value={selectedUser.status}
+                onChange={(e) =>
+                  setSelectedUser((prev: any) => ({
+                    ...prev,
+                    status: e.target.value === "true",
+                  }))
+                }
+              >
+                <MenuItem value="true">Active</MenuItem>
+                <MenuItem value="false">Inactive</MenuItem>
+              </Select>
+            </FormControl>
 
             <Autocomplete
               multiple
@@ -411,7 +432,7 @@ export default function ManageUsers() {
                 px: 4,
               }}
             >
-              Save
+              Update
             </Button>
             <Button
               variant="contained"

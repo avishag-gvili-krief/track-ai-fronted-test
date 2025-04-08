@@ -27,7 +27,7 @@ interface NewUserForm {
   email: string;
   phone: string;
   password: string;
-  userType: string;
+  role: string;
   companyIds: string[];
   reminders: string[];
 }
@@ -54,11 +54,10 @@ export default function AddUser() {
     email: "",
     phone: "",
     password: "",
-    userType: "Standard",
+    role: "Standard",
     companyIds: [],
     reminders: [],
   });
-
 
   const [errors, setErrors] = useState<{
     firstName?: string;
@@ -89,12 +88,7 @@ export default function AddUser() {
         email: form.email,
         phone: form.phone || "",
         password: form.password,
-        role:
-          form.userType === "Super Admin"
-            ? 1
-            : form.userType === "Admin"
-            ? 3
-            : 2,
+        role: form.role === "Super Admin" ? 1 : form.role === "Admin" ? 3 : 2,
         isActive: true,
         reminders: form.reminders || [],
         verificationTmpPass: "",
@@ -104,10 +98,9 @@ export default function AddUser() {
       });
 
       await fetchUsers();
-        navigate("/manage-users");
+      navigate("/manage-users");
     } catch (error) {
       console.error("Error adding user:", error);
-
     }
   };
 
@@ -222,8 +215,8 @@ export default function AddUser() {
           <FormControl fullWidth disabled={!isSuperAdmin}>
             <InputLabel>User Type</InputLabel>
             <Select
-              value={form.userType}
-              onChange={(e) => setForm({ ...form, userType: e.target.value })}
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
             >
               <MenuItem value="Standard">Standard</MenuItem>
               <MenuItem value="Admin">Admin</MenuItem>
