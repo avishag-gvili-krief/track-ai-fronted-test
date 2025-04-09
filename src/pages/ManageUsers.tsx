@@ -77,8 +77,15 @@ export default function ManageUsers() {
     const { value } = e.target;
     setSelectedUser((prev: any) => ({ ...prev, [field]: value }));
   };
+  useEffect(() => {
+    if (selectedUser?.reminders) {
+      console.log(">>> selectedUser.reminders:", selectedUser.reminders);
+    }
+  }, [selectedUser]);
 
   const handleRowClick = (user: any) => {
+    
+    console.log("raw user.reminders:", user.reminders);
     if (selectedUser?.id === user.id) {
       setSelectedUser(null);
     } else {
@@ -95,6 +102,9 @@ export default function ManageUsers() {
       setSelectedUser({
         ...user,
         companyIds,
+        reminders: Array.isArray(user.reminders)
+          ? [...user.reminders]
+          : defaultReminders.filter(() => false),
       });
     }
   };
@@ -386,8 +396,10 @@ export default function ManageUsers() {
             </FormControl>
 
             <FormControl fullWidth>
-              <InputLabel>Reminders</InputLabel>
+              <InputLabel id="reminders-label">Reminders</InputLabel>
               <Select
+                key={selectedUser.id}
+                labelId="reminders-label"
                 multiple
                 value={selectedUser.reminders || []}
                 onChange={(e) =>
@@ -400,7 +412,12 @@ export default function ManageUsers() {
               >
                 {defaultReminders.map((day) => (
                   <MenuItem key={day} value={day}>
-                    <Checkbox checked={selectedUser.reminders?.includes(day)} />
+                    <Checkbox
+                      checked={
+                        Array.isArray(selectedUser.reminders) &&
+                        selectedUser.reminders.includes(day)
+                      }
+                    />
                     <ListItemText primary={day} />
                   </MenuItem>
                 ))}

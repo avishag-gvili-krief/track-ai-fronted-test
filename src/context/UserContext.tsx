@@ -13,6 +13,7 @@ interface User {
   userType: string;
   company?: string;
   password?: string;
+  reminders?:string[]
 }
 
 export interface Company {
@@ -77,7 +78,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
               status: u.isActive,
               userType: u.role === 1 ? "Super Admin" : u.role === 2 ? "Standard" : "Admin",
               company: companyName,
+              reminders: Array.isArray(u.reminders) ? u.reminders : [], 
             };
+            
           } else {
             const existingUser = usersMap[u.id];
             existingUser.company = existingUser.company + ", " + companyName;

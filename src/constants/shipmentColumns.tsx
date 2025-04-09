@@ -8,7 +8,6 @@ import {
 import { LinearProgress, Stack, IconButton, Tooltip } from "@mui/material";
 import PhoneEnabledIcon from "@mui/icons-material/PhoneEnabled";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
-import React from "react";
 
 /**
  * Compact column layout used for small table view
