@@ -11,6 +11,7 @@ import {
   Popper,
   Paper,
   ClickAwayListener,
+  Tooltip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -78,117 +79,123 @@ const DashboardToolbar: React.FC<Props> = ({
       justifyContent="space-between"
       sx={{ my: 2 }}
     >
-      <TextField
-        variant="outlined"
-        placeholder="Search in list"
-        value={searchText}
-        onChange={(e) => requestSearch(e.target.value)}
-        InputProps={{
-          startAdornment: <SearchIcon sx={{ color: "gray", mr: 1 }} />,
-        }}
-        sx={{ width: 250, bgcolor: "white", borderRadius: "4px" }}
-      />
-
-      <Box>
-        <Button
+      <Tooltip title="Global Search">
+        <TextField
           variant="outlined"
-          startIcon={<FilterListIcon />}
-          onClick={handleFilterClick}
+          placeholder="Search in list"
+          value={searchText}
+          onChange={(e) => requestSearch(e.target.value)}
+          InputProps={{
+            startAdornment: <SearchIcon sx={{ color: "gray", mr: 1 }} />,
+          }}
+          sx={{ width: 250, bgcolor: "white", borderRadius: "4px" }}
+        />
+      </Tooltip>
+      <Tooltip title="Open advanced filter options">
+        <Box>
+          <Button
+            variant="outlined"
+            startIcon={<FilterListIcon />}
+            onClick={handleFilterClick}
+            sx={{
+              mx: 1,
+              bgcolor: "white",
+              borderRadius: "8px",
+              fontWeight: 600,
+              textTransform: "none",
+            }}
+          >
+            Filter
+          </Button>
+
+          <Popper
+            open={filterOpen}
+            anchorEl={anchorEl}
+            placement="bottom-start"
+            modifiers={[{ name: "offset", options: { offset: [0, 8] } }]}
+            style={{ zIndex: 1300 }}
+          >
+            <ClickAwayListener onClickAway={handleClickAway}>
+              <Paper
+                elevation={3}
+                sx={{
+                  width: 260,
+                  bgcolor: "white",
+                  borderRadius: 2,
+                  boxShadow: 3,
+                  p: 2,
+                  maxHeight: 400,
+                  overflowY: "auto",
+                }}
+              >
+                <FiltersPanel
+                  open={filterOpen}
+                  onClose={onApplyFilters}
+                  selectedInsights={pendingInsights}
+                  selectedStatuses={pendingStatuses}
+                  handleFilterChange={handlePendingFilterChange}
+                  onApplyFilters={onApplyFilters}
+                />
+              </Paper>
+            </ClickAwayListener>
+          </Popper>
+        </Box>
+      </Tooltip>
+      <Tooltip title="Filter data by one or more companies">
+        <Select
+          multiple
+          displayEmpty
+          value={selectedCompanies}
+          onChange={(e) => {
+            const value = e.target.value;
+            const selected =
+              typeof value === "string" ? value.split(",") : value;
+            setSelectedCompanies(selected);
+            onApplyFilters();
+          }}
+          renderValue={(selected) => {
+            if (selected.length === 0) {
+              return <em style={{ color: "#999" }}>Select Company</em>;
+            }
+
+            const selectedNames = companies
+              .filter((c) => selected.includes(c.customerNumber.toString()))
+              .map((c) => c.customerName);
+
+            return selectedNames.join(", ");
+          }}
           sx={{
-            mx: 1,
+            minWidth: 300,
             bgcolor: "white",
-            borderRadius: "8px",
-            fontWeight: 600,
-            textTransform: "none",
+            borderRadius: "4px",
+            fontWeight: 500,
           }}
         >
-          Filter
-        </Button>
-
-        <Popper
-          open={filterOpen}
-          anchorEl={anchorEl}
-          placement="bottom-start"
-          modifiers={[{ name: "offset", options: { offset: [0, 8] } }]}
-          style={{ zIndex: 1300 }}
+          {companies.map((company) => {
+            const customerNum = company.customerNumber.toString();
+            return (
+              <MenuItem key={company.id} value={customerNum}>
+                <Checkbox checked={selectedCompanies.includes(customerNum)} />
+                {company.customerName}
+              </MenuItem>
+            );
+          })}
+        </Select>
+      </Tooltip>
+      <Tooltip title="Download current table as Excel file">
+        <Button
+          sx={{
+            ml: 1,
+            bgcolor: "orange",
+            color: "white",
+            fontWeight: "bold",
+            textTransform: "none",
+          }}
+          onClick={handleDownloadExcel}
         >
-          <ClickAwayListener onClickAway={handleClickAway}>
-            <Paper
-              elevation={3}
-              sx={{
-                width: 260,
-                bgcolor: "white",
-                borderRadius: 2,
-                boxShadow: 3,
-                p: 2,
-                maxHeight: 400,
-                overflowY: "auto",
-              }}
-            >
-              <FiltersPanel
-                open={filterOpen}
-                onClose={onApplyFilters}
-                selectedInsights={pendingInsights}
-                selectedStatuses={pendingStatuses}
-                handleFilterChange={handlePendingFilterChange}
-                onApplyFilters={onApplyFilters}
-              />
-            </Paper>
-          </ClickAwayListener>
-        </Popper>
-      </Box>
-
-      <Select
-        multiple
-        displayEmpty
-        value={selectedCompanies}
-        onChange={(e) => {
-          const value = e.target.value;
-          const selected = typeof value === "string" ? value.split(",") : value;
-          setSelectedCompanies(selected);
-          onApplyFilters();
-        }}
-        renderValue={(selected) => {
-          if (selected.length === 0) {
-            return <em style={{ color: "#999" }}>Select Company</em>;
-          }
-
-          const selectedNames = companies
-            .filter((c) => selected.includes(c.customerNumber.toString()))
-            .map((c) => c.customerName);
-
-          return selectedNames.join(", ");
-        }}
-        sx={{
-          minWidth: 300,
-          bgcolor: "white",
-          borderRadius: "4px",
-          fontWeight: 500,
-        }}
-      >
-        {companies.map((company) => {
-          const customerNum = company.customerNumber.toString();
-          return (
-            <MenuItem key={company.id} value={customerNum}>
-              <Checkbox checked={selectedCompanies.includes(customerNum)} />
-              {company.customerName}
-            </MenuItem>
-          );
-        })}
-      </Select>
-
-      <Button
-        sx={{
-          ml: 1,
-          bgcolor: "orange",
-          color: "white",
-          fontWeight: "bold",
-          textTransform: "none",
-        }}
-        onClick={handleDownloadExcel}
-      >
-        <CloudDownloadIcon />
-      </Button>
+          <CloudDownloadIcon />
+        </Button>
+      </Tooltip>
     </Box>
   );
 };

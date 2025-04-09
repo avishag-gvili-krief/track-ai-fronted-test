@@ -18,7 +18,7 @@ interface WinwordContextType {
     fields: string[],
     values: string[],
     customerCodes: string[]
-  ) => Promise<void>;
+  ) => Promise<TrackedShipmentsResponse | null>; // <- החזרנו את התוצאה
 
   resetWinwordData: () => void;
 }
@@ -33,7 +33,7 @@ export const WinwordProvider = ({ children }: { children: React.ReactNode }) => 
     fields: string[],
     values: string[],
     customerCodes: string[]
-  ) => {
+  ): Promise<TrackedShipmentsResponse | null> => {
     try {
       showLoading();
 
@@ -50,9 +50,11 @@ export const WinwordProvider = ({ children }: { children: React.ReactNode }) => 
         }
       );
 
-      setWinwordData(response.data);
+      setWinwordData(response.data);  
+      return response.data;                       
     } catch (error) {
       console.error("Failed to fetch filtered WIN data:", error);
+      return null;
     } finally {
       hideLoading();
     }

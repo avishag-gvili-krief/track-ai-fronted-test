@@ -1,10 +1,17 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Container, Box, Card, Typography } from "@mui/material";
+import {
+  Container,
+  Box,
+  Card,
+  Typography,
+  Pagination,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import {
   DataGrid,
   GridRenderCellParams,
   GridRowParams,
-  GridRowsProp,
 } from "@mui/x-data-grid";
 import { exportToExcel } from "../utils/exportToExcel";
 import { AuthContext } from "../context/AuthContext";
@@ -28,17 +35,22 @@ interface DashboardProps {
   isCompact: boolean;
   onRowSelected?: (containerId: string | null) => void;
 }
-
+const dataStore = {
+  originalData: null as any[] | null,
+  filteredData: null as any[] | null,
+  currentMode: "original" as "original" | "filtered",
+  initialLoadDone: false,
+  currentFilters: [] as string[],
+};
 const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
   const { user } = useContext(AuthContext);
   const { userPhones, fetchUserPhones } = useSmsContext();
-  const { filterShipmentsByMultipleFields, winwordData } = useWinwordContext();
+  const { filterShipmentsByMultipleFields } = useWinwordContext();
   const [filterOpen, setFilterOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedContainerId, setSelectedContainerId] = useState<string | null>(
     null
   );
-  const [shipments, setShipments] = useState<any[]>([]);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const {
@@ -51,19 +63,30 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     selectedStatuses,
     handlePendingFilterChange,
     applyPendingFilters,
+    setPendingInsights,
+    setPendingStatuses
   } = useShipmentFilters();
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
+  const [displayData, setDisplayData] = useState<any[]>([]);
+  useEffect(() => {
+    if (filterOpen) {
+      setPendingInsights(dataStore.currentFilters);
+      setPendingStatuses(selectedStatuses);
+    }
+  }, [filterOpen]);
 
   useEffect(() => {
-    if (winwordData?.data?.trackedShipments?.data) {
-      setShipments(winwordData.data.trackedShipments.data);
-    } else if (user?.winwordData?.data?.trackedShipments?.data) {
-      setShipments(user.winwordData.data.trackedShipments.data);
+    const userData = user?.winwordData?.data?.trackedShipments?.data;
+
+    if (userData?.length && !dataStore.initialLoadDone) {
+      dataStore.originalData = userData;
+      dataStore.initialLoadDone = true;
+      setDisplayData(userData);
     }
-  }, [winwordData, user]);
+  }, [user?.winwordData]);
 
   useEffect(() => {
     if (user?.id) fetchUserPhones(user.id);
@@ -73,12 +96,20 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     setExpandedRowId(null);
   }, [paginationModel.page]);
 
+  useEffect(() => {
+    if (dataStore.currentMode === "filtered" && dataStore.filteredData) {
+      setDisplayData(dataStore.filteredData);
+    } else if (dataStore.originalData) {
+      setDisplayData(dataStore.originalData);
+    }
+  }, [isCompact]);
+
   const rows = useMemo(() => {
-    return mapShipmentsToRows(shipments, user?.id || "").map((row) => ({
+    return mapShipmentsToRows(displayData, user?.id || "").map((row) => ({
       ...row,
       shipmentId: row.id || "",
     }));
-  }, [shipments, user]);
+  }, [displayData, user]);
 
   const filteredRows = useMemo(() => {
     return filterShipments(rows, {
@@ -89,7 +120,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     });
   }, [rows, selectedCompanies, searchText, selectedInsights, selectedStatuses]);
 
-  const visibleRows = useMemo(() => {
+  const visibleMainRows = useMemo(() => {
     const start = paginationModel.page * paginationModel.pageSize;
     const end = start + paginationModel.pageSize;
     return filteredRows.slice(start, end);
@@ -97,10 +128,10 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
 
   // Generate tracking details rows when a row is expanded
   const combinedRows = useMemo(() => {
-    const rowsWithDetails: any[] = [];
+    const result: any[] = [];
 
-    visibleRows.forEach((row) => {
-      rowsWithDetails.push(row);
+    visibleMainRows.forEach((row) => {
+      result.push(row);
 
       if (row.id === expandedRowId) {
         const headerRow = {
@@ -161,12 +192,12 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
                 },
               ];
 
-        rowsWithDetails.push(headerRow, ...detailRows);
+        result.push(headerRow, ...detailRows);
       }
     });
 
-    return rowsWithDetails;
-  }, [visibleRows, expandedRowId]);
+    return result;
+  }, [visibleMainRows, expandedRowId]);
 
   const shipmentStats = useMemo(
     () => calculateShipmentStats(filteredRows),
@@ -179,14 +210,15 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
 
   const handleApplyFilters = () => {
     applyPendingFilters();
-
     const selectedFilters = insightOptions.filter((i) =>
       pendingInsights.includes(i.title)
     );
-
+    dataStore.currentFilters = [...pendingInsights];
+    setPendingInsights(dataStore.currentFilters);
     if (!selectedFilters.length) {
-      if (user?.winwordData?.data?.trackedShipments?.data) {
-        setShipments(user.winwordData.data.trackedShipments.data);
+      dataStore.currentMode = "original";
+      if (dataStore.originalData) {
+        setDisplayData(dataStore.originalData);
       }
       setFilterOpen(false);
       return;
@@ -207,7 +239,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         fields.push(opt.field);
         values.push(opt.values);
       } else if (opt.ranges) {
-        console.warn("Range filters not supported yet in multi-filter GET");
+        console.warn("⚠️ Range filters not supported yet in multi-filter GET");
       }
     });
 
@@ -216,7 +248,17 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         c.customerNumber.toString()
     );
 
-    filterShipmentsByMultipleFields(fields, values, customerCodes);
+    filterShipmentsByMultipleFields(fields, values, customerCodes).then(
+      (response) => {
+        if (response?.data?.trackedShipments?.data) {
+          const newFilteredData = response.data.trackedShipments.data;
+          dataStore.filteredData = newFilteredData;
+          dataStore.currentMode = "filtered";
+          setDisplayData(newFilteredData);
+        }
+      }
+    );
+
     setFilterOpen(false);
   };
 
@@ -342,17 +384,16 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     }
   };
   const currentPageContainsExpandedRow = useMemo(() => {
-    const start = paginationModel.page * paginationModel.pageSize;
-    const end = start + paginationModel.pageSize;
-    const visibleIds = filteredRows.slice(start, end).map((row) => row.id);
+    const visibleIds = visibleMainRows.map((row) => row.id);
     return expandedRowId ? visibleIds.includes(expandedRowId) : false;
-  }, [filteredRows, paginationModel, expandedRowId]);
-  
+  }, [visibleMainRows, expandedRowId]);
+
   useEffect(() => {
     if (!currentPageContainsExpandedRow) {
       setExpandedRowId(null);
+      onRowSelected?.(null);
     }
-  }, [paginationModel.page, currentPageContainsExpandedRow]);
+  }, [paginationModel.page, currentPageContainsExpandedRow, onRowSelected]);
   return (
     <Container maxWidth="xl">
       <DashboardToolbar
@@ -382,12 +423,8 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         <DataGrid
           rows={combinedRows}
           columns={columns}
-          pagination
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          pageSizeOptions={[10, 25, 100]}
-          rowCount={filteredRows.length}
           onRowClick={handleRowClick}
+          hideFooter
           getRowClassName={(params) => {
             if (params.row.isDetailRow) {
               let base = params.id.toString().endsWith("-header")
@@ -533,6 +570,35 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
           }}
           isRowSelectable={(params) => !params.row.isDetailRow}
         />
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mt={2}
+        >
+          <Select
+            value={paginationModel.pageSize}
+            onChange={(e) =>
+              setPaginationModel({ page: 0, pageSize: Number(e.target.value) })
+            }
+            size="small"
+          >
+            {[10, 25, 100].map((size) => (
+              <MenuItem key={size} value={size}>
+                {size}
+              </MenuItem>
+            ))}
+          </Select>
+
+          <Pagination
+            count={Math.ceil(filteredRows.length / paginationModel.pageSize)}
+            page={paginationModel.page + 1}
+            onChange={(_, newPage) =>
+              setPaginationModel({ ...paginationModel, page: newPage - 1 })
+            }
+          />
+        </Box>
+
         {selectedContainerId && (
           <TrackDialog
             key={selectedContainerId}
