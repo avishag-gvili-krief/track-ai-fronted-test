@@ -34,18 +34,12 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
   const { userPhones, fetchUserPhones } = useSmsContext();
   const { filterShipmentsByMultipleFields, winwordData } = useWinwordContext();
   const [filterOpen, setFilterOpen] = useState(false);
-  const [userPageSize, setUserPageSize] = useState(10);
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 10,
-  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedContainerId, setSelectedContainerId] = useState<string | null>(
     null
   );
   const [shipments, setShipments] = useState<any[]>([]);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
-  const [combinedRows, setCombinedRows] = useState<GridRowsProp>([]);
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const {
     searchText,
@@ -58,6 +52,10 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     handlePendingFilterChange,
     applyPendingFilters,
   } = useShipmentFilters();
+  const [paginationModel, setPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
 
   useEffect(() => {
     if (winwordData?.data?.trackedShipments?.data) {
@@ -65,11 +63,15 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     } else if (user?.winwordData?.data?.trackedShipments?.data) {
       setShipments(user.winwordData.data.trackedShipments.data);
     }
-  }, [winwordData,user]);
+  }, [winwordData, user]);
 
   useEffect(() => {
     if (user?.id) fetchUserPhones(user.id);
   }, [user?.id]);
+
+  useEffect(() => {
+    setExpandedRowId(null);
+  }, [paginationModel.page]);
 
   const rows = useMemo(() => {
     return mapShipmentsToRows(shipments, user?.id || "").map((row) => ({
@@ -87,123 +89,84 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     });
   }, [rows, selectedCompanies, searchText, selectedInsights, selectedStatuses]);
 
+  const visibleRows = useMemo(() => {
+    const start = paginationModel.page * paginationModel.pageSize;
+    const end = start + paginationModel.pageSize;
+    return filteredRows.slice(start, end);
+  }, [filteredRows, paginationModel]);
+
   // Generate tracking details rows when a row is expanded
-  useEffect(() => {
-    //check
-    if (!expandedRowId) {
-      setCombinedRows(filteredRows);
-      setPaginationModel((prev) => ({
-        ...prev,
-        pageSize: 25,
-      }));
-      return;
-    }
-    //
+  const combinedRows = useMemo(() => {
+    const rowsWithDetails: any[] = [];
 
-    const expandedRow = filteredRows.find((row) => row.id === expandedRowId);
-    if (!expandedRowId) {
-      setCombinedRows(filteredRows);
-      setPaginationModel((prev) => ({
-        ...prev,
-        pageSize: 25,
-      }));
-      return;
-    }
+    visibleRows.forEach((row) => {
+      rowsWithDetails.push(row);
 
-    // Create header row for the tracking details
-    const headerRow = {
-      id: `${expandedRowId}-header`,
-      shipmentId: `${expandedRowId}-header`, // Add all required fields from columns
-      description: "Status",
-      location: "Location",
-      vesselName: "Vessel",
-      voyage: "Voyage",
-      timeInfo: "Planned / Actual At",
-      icon: { imgSrc: "", imgAlt: "Icon" },
-      parentId: expandedRowId,
-      isDetailRow: true,
-    };
-
-    // Make sure to map all necessary fields that DataGrid columns expect
-    const createDetailRow = (event: any, index: number) => {
-      const { imgSrc, imgAlt } = showEventIconHandler(event);
-
-      const baseDetailRow = { ...expandedRow };
-
-      const isCurrentEvent = index === expandedRow.currentEventIndex;
-
-      return {
-        ...baseDetailRow,
-        id: `${expandedRowId}-detail-${index}`,
-        shipmentId: `${expandedRowId}-detail-${index}`,
-        description: event.description || "N/A",
-        location: event.port?.properties?.name || "N/A",
-        vesselName: event.vessel?.name || "N/A",
-        vessel: event.vessel?.name || "N/A",
-        voyage: event.voyage || "N/A",
-        timeInfo: formatDate(event.timestamps?.datetime),
-        icon: { imgSrc, imgAlt },
-        parentId: expandedRowId,
-        isDetailRow: true,
-        isCurrentEvent,
-        isAfterCurrentEvent: index > expandedRow?.currentEventIndex,
-      };
-    };
-
-    // Access the events array correctly
-    const trackingEvents = expandedRow?.events || [];
-
-    // Create detail rows for each tracking event
-    let detailRows = [];
-
-    if (Array.isArray(trackingEvents) && trackingEvents.length > 0) {
-      detailRows = trackingEvents.map((event, index) =>
-        createDetailRow(event, index)
-      );
-    } else {
-      // No events? Add a "no data" row
-      detailRows = [
-        {
-          ...expandedRow, // Include all fields from parent row
-          id: `${expandedRowId}-no-data`,
-          shipmentId: `${expandedRowId}-no-data`,
-          description: "No tracking events available",
-          location: "",
-          vesselName: "",
-          vessel: "", // Support both field names
-          voyage: "",
-          timeInfo: "",
-          icon: { imgSrc: "", imgAlt: "" },
-          parentId: expandedRowId,
+      if (row.id === expandedRowId) {
+        const headerRow = {
+          id: `${row.id}-header`,
+          shipmentId: `${row.id}-header`,
+          description: "Status",
+          location: "Location",
+          vesselName: "Vessel",
+          voyage: "Voyage",
+          timeInfo: "Planned / Actual At",
+          icon: { imgSrc: "", imgAlt: "Icon" },
+          parentId: row.id,
           isDetailRow: true,
-        },
-      ];
-    }
+        };
 
-    // Create a fully populated header row based on parent row
-    const fullHeaderRow = {
-      ...expandedRow, // Include all fields from parent row
-      ...headerRow, // Override with header specific fields
-    };
+        const createDetailRow = (event: any, index: number) => {
+          const { imgSrc, imgAlt } = showEventIconHandler(event);
+          const isCurrentEvent = index === row.currentEventIndex;
 
-    // Insert the detail rows after the expanded row
-    const newRows = [...filteredRows];
-    const expandedRowIndex = newRows.findIndex(
-      (row) => row.id === expandedRowId
-    );
+          return {
+            ...row,
+            id: `${row.id}-detail-${index}`,
+            shipmentId: `${row.id}-detail-${index}`,
+            description: event.description || "N/A",
+            location: event.port?.properties?.name || "N/A",
+            vesselName: event.vessel?.name || "N/A",
+            vessel: event.vessel?.name || "N/A",
+            voyage: event.voyage || "N/A",
+            timeInfo: formatDate(event.timestamps?.datetime),
+            icon: { imgSrc, imgAlt },
+            parentId: row.id,
+            isDetailRow: true,
+            isCurrentEvent,
+            isAfterCurrentEvent: index > row.currentEventIndex,
+          };
+        };
 
-    if (expandedRowIndex !== -1) {
-      newRows.splice(expandedRowIndex + 1, 0, fullHeaderRow, ...detailRows);
-    }
-    console.log("newRows", newRows);
+        const trackingEvents = row?.events || [];
+        const detailRows =
+          Array.isArray(trackingEvents) && trackingEvents.length > 0
+            ? trackingEvents.map((event, index) =>
+                createDetailRow(event, index)
+              )
+            : [
+                {
+                  ...row,
+                  id: `${row.id}-no-data`,
+                  shipmentId: `${row.id}-no-data`,
+                  description: "No tracking events available",
+                  location: "",
+                  vesselName: "",
+                  vessel: "",
+                  voyage: "",
+                  timeInfo: "",
+                  icon: { imgSrc: "", imgAlt: "" },
+                  parentId: row.id,
+                  isDetailRow: true,
+                },
+              ];
 
-    setCombinedRows(newRows);
-    const extraRowsCount = newRows.length - filteredRows.length;
-    setPaginationModel((prev) => ({
-      ...prev,
-      pageSize: userPageSize + extraRowsCount,
-    }));
-  }, [filteredRows, expandedRowId]);
+        rowsWithDetails.push(headerRow, ...detailRows);
+      }
+    });
+
+    return rowsWithDetails;
+  }, [visibleRows, expandedRowId]);
 
   const shipmentStats = useMemo(
     () => calculateShipmentStats(filteredRows),
@@ -378,7 +341,18 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
       onRowSelected?.(params.row.id);
     }
   };
-
+  const currentPageContainsExpandedRow = useMemo(() => {
+    const start = paginationModel.page * paginationModel.pageSize;
+    const end = start + paginationModel.pageSize;
+    const visibleIds = filteredRows.slice(start, end).map((row) => row.id);
+    return expandedRowId ? visibleIds.includes(expandedRowId) : false;
+  }, [filteredRows, paginationModel, expandedRowId]);
+  
+  useEffect(() => {
+    if (!currentPageContainsExpandedRow) {
+      setExpandedRowId(null);
+    }
+  }, [paginationModel.page, currentPageContainsExpandedRow]);
   return (
     <Container maxWidth="xl">
       <DashboardToolbar
@@ -400,17 +374,19 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         <ShipmentStats stats={shipmentStats} statusColors={statusColors} />
       </Card>
 
-      <Box mt={3}  ref={gridContainerRef} sx={{ maxHeight: '70vh', overflowY: 'auto' }}>
+      <Box
+        mt={3}
+        ref={gridContainerRef}
+        sx={{ maxHeight: "70vh", overflowY: "auto" }}
+      >
         <DataGrid
           rows={combinedRows}
           columns={columns}
           pagination
           paginationModel={paginationModel}
-          onPaginationModelChange={(newModel) => {
-            setPaginationModel(newModel);
-            setUserPageSize(newModel.pageSize);
-          }}
+          onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[10, 25, 100]}
+          rowCount={filteredRows.length}
           onRowClick={handleRowClick}
           getRowClassName={(params) => {
             if (params.row.isDetailRow) {

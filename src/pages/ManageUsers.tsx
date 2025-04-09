@@ -77,15 +77,9 @@ export default function ManageUsers() {
     const { value } = e.target;
     setSelectedUser((prev: any) => ({ ...prev, [field]: value }));
   };
-  useEffect(() => {
-    if (selectedUser?.reminders) {
-      console.log(">>> selectedUser.reminders:", selectedUser.reminders);
-    }
-  }, [selectedUser]);
 
   const handleRowClick = (user: any) => {
     
-    console.log("raw user.reminders:", user.reminders);
     if (selectedUser?.id === user.id) {
       setSelectedUser(null);
     } else {
@@ -127,7 +121,6 @@ export default function ManageUsers() {
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
-    console.log("selectedUser.userType ", selectedUser.userType);
     const updatedUser = {
       id: selectedUser.id,
       firstName: selectedUser.firstName,
@@ -147,7 +140,6 @@ export default function ManageUsers() {
     };
 
     try {
-      console.log("updatedUser ", updatedUser);
       await updateUser(selectedUser.id, updatedUser);
       setSelectedUser(null);
     } catch (error) {
