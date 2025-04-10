@@ -9,6 +9,7 @@ import {
   ListItemIcon,
   Divider,
   Box,
+  Tooltip,
 } from "@mui/material";
 import { Dashboard, Business, People, Lock, Logout } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -69,14 +70,16 @@ export default function Navbar() {
           {fullName} <br />
           <Typography variant="caption">{companyDisplay}</Typography>
         </Typography>
-
-        {user&&<Avatar
-          sx={{ bgcolor: "orange", ml: 2, cursor: "pointer", mt: 1 }}
-          onClick={handleAvatarClick}
-        >
-          {initials}
-        </Avatar>}
-
+        {user && (
+          <Tooltip title="Open advanced filter options">
+            <Avatar
+              sx={{ bgcolor: "orange", ml: 2, cursor: "pointer", mt: 1 }}
+              onClick={handleAvatarClick}
+            >
+              {initials}
+            </Avatar>
+          </Tooltip>
+        )}
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}

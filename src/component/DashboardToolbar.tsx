@@ -91,8 +91,9 @@ const DashboardToolbar: React.FC<Props> = ({
           sx={{ width: 250, bgcolor: "white", borderRadius: "4px" }}
         />
       </Tooltip>
-      <Tooltip title="Open advanced filter options">
-        <Box>
+
+      <Box>
+        <Tooltip title="Open advanced filter options">
           <Button
             variant="outlined"
             startIcon={<FilterListIcon />}
@@ -107,40 +108,40 @@ const DashboardToolbar: React.FC<Props> = ({
           >
             Filter
           </Button>
+        </Tooltip>
+        <Popper
+          open={filterOpen}
+          anchorEl={anchorEl}
+          placement="bottom-start"
+          modifiers={[{ name: "offset", options: { offset: [0, 8] } }]}
+          style={{ zIndex: 1300 }}
+        >
+          <ClickAwayListener onClickAway={handleClickAway}>
+            <Paper
+              elevation={3}
+              sx={{
+                width: 260,
+                bgcolor: "white",
+                borderRadius: 2,
+                boxShadow: 3,
+                p: 2,
+                maxHeight: 400,
+                overflowY: "auto",
+              }}
+            >
+              <FiltersPanel
+                open={filterOpen}
+                onClose={onApplyFilters}
+                selectedInsights={pendingInsights}
+                selectedStatuses={pendingStatuses}
+                handleFilterChange={handlePendingFilterChange}
+                onApplyFilters={onApplyFilters}
+              />
+            </Paper>
+          </ClickAwayListener>
+        </Popper>
+      </Box>
 
-          <Popper
-            open={filterOpen}
-            anchorEl={anchorEl}
-            placement="bottom-start"
-            modifiers={[{ name: "offset", options: { offset: [0, 8] } }]}
-            style={{ zIndex: 1300 }}
-          >
-            <ClickAwayListener onClickAway={handleClickAway}>
-              <Paper
-                elevation={3}
-                sx={{
-                  width: 260,
-                  bgcolor: "white",
-                  borderRadius: 2,
-                  boxShadow: 3,
-                  p: 2,
-                  maxHeight: 400,
-                  overflowY: "auto",
-                }}
-              >
-                <FiltersPanel
-                  open={filterOpen}
-                  onClose={onApplyFilters}
-                  selectedInsights={pendingInsights}
-                  selectedStatuses={pendingStatuses}
-                  handleFilterChange={handlePendingFilterChange}
-                  onApplyFilters={onApplyFilters}
-                />
-              </Paper>
-            </ClickAwayListener>
-          </Popper>
-        </Box>
-      </Tooltip>
       <Tooltip title="Filter data by one or more companies">
         <Select
           multiple

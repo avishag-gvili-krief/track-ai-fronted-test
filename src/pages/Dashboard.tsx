@@ -64,7 +64,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     handlePendingFilterChange,
     applyPendingFilters,
     setPendingInsights,
-    setPendingStatuses
+    setPendingStatuses,
   } = useShipmentFilters();
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -414,190 +414,197 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
       <Card sx={{ p: 2, bgcolor: "white", borderRadius: "12px", boxShadow: 4 }}>
         <ShipmentStats stats={shipmentStats} statusColors={statusColors} />
       </Card>
-
       <Box
         mt={3}
-        ref={gridContainerRef}
-        sx={{ maxHeight: "70vh", overflowY: "auto" }}
+        display="flex"
+        flexDirection="column"
+        sx={{ height: "75vh" }} // גובה קבוע כולל
       >
-        <DataGrid
-          rows={combinedRows}
-          columns={columns}
-          onRowClick={handleRowClick}
-          hideFooter
-          getRowClassName={(params) => {
-            if (params.row.isDetailRow) {
-              let base = params.id.toString().endsWith("-header")
-                ? "detail-header-row"
-                : "detail-row";
+        {/* אזור תוכן נגלל בלבד */}
+        <Box sx={{ flex: 1, overflowY: "auto" }}>
+          <DataGrid
+            rows={combinedRows}
+            columns={columns}
+            onRowClick={handleRowClick}
+            hideFooter
+            getRowClassName={(params) => {
+              if (params.row.isDetailRow) {
+                let base = params.id.toString().endsWith("-header")
+                  ? "detail-header-row"
+                  : "detail-row";
 
-              if (params.row.isCurrentEvent) base += " current-event";
-              else if (params.row.isAfterCurrentEvent) base += " faded-row";
+                if (params.row.isCurrentEvent) base += " current-event";
+                else if (params.row.isAfterCurrentEvent) base += " faded-row";
 
-              const siblings = combinedRows.filter(
-                (r) =>
-                  r.parentId === params.row.parentId &&
-                  r.isDetailRow &&
-                  !r.id.endsWith("header")
-              );
-              const index = siblings.findIndex((r) => r.id === params.row.id);
-              if (index === 0) base += " first-event";
-              if (index === siblings.length - 1) base += " last-event";
+                const siblings = combinedRows.filter(
+                  (r) =>
+                    r.parentId === params.row.parentId &&
+                    r.isDetailRow &&
+                    !r.id.endsWith("header")
+                );
+                const index = siblings.findIndex((r) => r.id === params.row.id);
+                if (index === 0) base += " first-event";
+                if (index === siblings.length - 1) base += " last-event";
 
-              return base;
-            }
-            return params.id === expandedRowId ? "expanded-row" : "";
-          }}
-          sx={{
-            "& .detail-row .MuiTypography-root": {
-              fontSize: "13px",
-            },
-            "& .detail-header-row .MuiTypography-root": {
-              fontWeight: "bold",
-              fontSize: "13px",
-              textAlign: "center",
-            },
-            minHeight: isCompact ? "50vh" : "70vh",
-            border: "none",
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: "#f0f0f0",
-              fontWeight: "bold",
-              borderBottom: "2px solid #ddd",
-            },
-            "& .MuiDataGrid-row": {
-              borderBottom: "none !important",
-              borderTop: "none !important",
-              border: "none !important",
-            },
-            "& .detail-row .MuiDataGrid-cell": {
-              display: "flex",
-              alignItems: "center",
-            },
-            "& .detail-row.current-event .MuiTypography-root": {
-              fontWeight: "bold",
-            },
-            "& .MuiDataGrid-row:hover": {
-              backgroundColor: "rgba(30, 136, 229, 0.08)",
-            },
-            "& .detail-row": {
-              backgroundColor: "#fffdf8",
-              position: "relative",
-              paddingLeft: "30px",
-            },
-            "& .detail-row::before": {
-              content: '""',
-              position: "absolute",
-              left: "15px",
-              top: "0",
-              height: "100%",
-              width: "2px",
-              backgroundColor: "#1e88e5",
-            },
+                return base;
+              }
+              return params.id === expandedRowId ? "expanded-row" : "";
+            }}
+            sx={{
+              "& .detail-row .MuiTypography-root": {
+                fontSize: "13px",
+              },
+              "& .detail-header-row .MuiTypography-root": {
+                fontWeight: "bold",
+                fontSize: "13px",
+                textAlign: "center",
+              },
+              minHeight: isCompact ? "50vh" : "70vh",
+              border: "none",
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#f0f0f0",
+                fontWeight: "bold",
+                borderBottom: "2px solid #ddd",
+              },
+              "& .MuiDataGrid-row": {
+                borderBottom: "none !important",
+                borderTop: "none !important",
+                border: "none !important",
+              },
+              "& .detail-row .MuiDataGrid-cell": {
+                display: "flex",
+                alignItems: "center",
+              },
+              "& .detail-row.current-event .MuiTypography-root": {
+                fontWeight: "bold",
+              },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "rgba(30, 136, 229, 0.08)",
+              },
+              "& .detail-row": {
+                backgroundColor: "#fffdf8",
+                position: "relative",
+                paddingLeft: "30px",
+              },
+              "& .detail-row::before": {
+                content: '""',
+                position: "absolute",
+                left: "15px",
+                top: "0",
+                height: "100%",
+                width: "2px",
+                backgroundColor: "#1e88e5",
+              },
 
-            "& .detail-row.first-event::before": {
-              top: "50%",
-            },
+              "& .detail-row.first-event::before": {
+                top: "50%",
+              },
 
-            "& .detail-row.last-event::before": {
-              height: "50%",
-            },
-            "& .detail-header-row::after": {
-              display: "none",
-            },
-            "& .detail-header-row::before": {
-              display: "none",
-            },
+              "& .detail-row.last-event::before": {
+                height: "50%",
+              },
+              "& .detail-header-row::after": {
+                display: "none",
+              },
+              "& .detail-header-row::before": {
+                display: "none",
+              },
 
-            "& .detail-header-row": {
-              backgroundColor: "#f5f5f5",
-              borderLeft: "4px solidrgb(0, 67, 126)",
-              fontWeight: "bold",
-              position: "relative",
-            },
-            "& .faded-row .MuiTypography-root": {
-              color: "#9e9e9e",
-            },
-            "& .expanded-row": {
-              backgroundColor: "#e3f2fd",
-            },
-            "& .MuiDataGrid-cell": {
-              borderBottom: "none !important",
-              borderTop: "none !important",
-              textAlign: "left",
-            },
+              "& .detail-header-row": {
+                backgroundColor: "#f5f5f5",
+                borderLeft: "4px solidrgb(0, 67, 126)",
+                fontWeight: "bold",
+                position: "relative",
+              },
+              "& .faded-row .MuiTypography-root": {
+                color: "#9e9e9e",
+              },
+              "& .expanded-row": {
+                backgroundColor: "#e3f2fd",
+              },
+              "& .MuiDataGrid-cell": {
+                borderBottom: "none !important",
+                borderTop: "none !important",
+                textAlign: "left",
+              },
 
-            "& .detail-row:not(.detail-header-row)::after": {
-              content: '""',
-              position: "absolute",
-              left: "11px",
-              top: "18px",
-              width: "10px",
-              height: "10px",
-              borderRadius: "50%",
-              backgroundColor: "#1e88e5",
-              zIndex: 1,
-            },
-            "& .MuiDataGrid-columnHeaderTitle": {
-              fontWeight: "bold",
-              textAlign: "center",
-              width: "100%",
-            },
-            "@keyframes blink": {
-              "0%": { opacity: 1 },
-              "50%": { opacity: 0.3 },
-              "100%": { opacity: 1 },
-            },
-            "& .detail-row.current-event::after": {
-              backgroundColor: "#ff9800",
-              animation: "blink 1.5s infinite",
-              borderRadius: "50%",
-              width: "10px",
-              height: "10px",
-              position: "absolute",
-              left: "11px",
-              top: "18px",
-              content: '""',
-            },
-            "& .detail-row.current-event": {
-              backgroundColor: "#fff3e0",
-            },
-            "& .MuiDataGrid-columnHeader": {
-              justifyContent: "center",
-            },
-          }}
-          getRowHeight={(params) => {
-            return params.model.isDetailRow ? 45 : 52;
-          }}
-          isRowSelectable={(params) => !params.row.isDetailRow}
-        />
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mt={2}
-        >
-          <Select
-            value={paginationModel.pageSize}
-            onChange={(e) =>
-              setPaginationModel({ page: 0, pageSize: Number(e.target.value) })
-            }
-            size="small"
-          >
-            {[10, 25, 100].map((size) => (
-              <MenuItem key={size} value={size}>
-                {size}
-              </MenuItem>
-            ))}
-          </Select>
-
-          <Pagination
-            count={Math.ceil(filteredRows.length / paginationModel.pageSize)}
-            page={paginationModel.page + 1}
-            onChange={(_, newPage) =>
-              setPaginationModel({ ...paginationModel, page: newPage - 1 })
-            }
-          />
+              "& .detail-row:not(.detail-header-row)::after": {
+                content: '""',
+                position: "absolute",
+                left: "11px",
+                top: "18px",
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                backgroundColor: "#1e88e5",
+                zIndex: 1,
+              },
+              "& .MuiDataGrid-columnHeaderTitle": {
+                fontWeight: "bold",
+                textAlign: "center",
+                width: "100%",
+              },
+              "@keyframes blink": {
+                "0%": { opacity: 1 },
+                "50%": { opacity: 0.3 },
+                "100%": { opacity: 1 },
+              },
+              "& .detail-row.current-event::after": {
+                backgroundColor: "#ff9800",
+                animation: "blink 1.5s infinite",
+                borderRadius: "50%",
+                width: "10px",
+                height: "10px",
+                position: "absolute",
+                left: "11px",
+                top: "18px",
+                content: '""',
+              },
+              "& .detail-row.current-event": {
+                backgroundColor: "#fff3e0",
+              },
+              "& .MuiDataGrid-columnHeader": {
+                justifyContent: "center",
+              },
+            }}
+            getRowHeight={(params) => {
+              return params.model.isDetailRow ? 45 : 52;
+            }}
+            isRowSelectable={(params) => !params.row.isDetailRow}
+          />{" "}
         </Box>
+        <Box
+    display="flex"
+    justifyContent="space-between"
+    alignItems="center"
+    px={1}
+    py={1}
+    borderTop="1px solid #ddd"
+    bgcolor="#fff"
+  >
+    <Select
+      value={paginationModel.pageSize}
+      onChange={(e) =>
+        setPaginationModel({ page: 0, pageSize: Number(e.target.value) })
+      }
+      size="small"
+    >
+      {[10, 25, 100].map((size) => (
+        <MenuItem key={size} value={size}>
+          {size}
+        </MenuItem>
+      ))}
+    </Select>
+
+    <Pagination
+      count={Math.ceil(filteredRows.length / paginationModel.pageSize)}
+      page={paginationModel.page + 1}
+      onChange={(_, newPage) =>
+        setPaginationModel({ ...paginationModel, page: newPage - 1 })
+      }
+    />
+  </Box>
+</Box>
 
         {selectedContainerId && (
           <TrackDialog
@@ -617,7 +624,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
             }}
           />
         )}
-      </Box>
+      {/* </Box> */}
     </Container>
   );
 };

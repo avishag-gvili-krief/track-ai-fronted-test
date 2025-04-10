@@ -15,13 +15,13 @@ export default function MapIframe({
   onLoadChange,
 }: MapIframeProps) {
 
-  // const MAPBOX_BASE_URL = __BLAZOR_MAPBOX_URL__;
-  // const src = containerId
-  //   ? `${MAPBOX_BASE_URL}/${containerId}`
-  //   : MAPBOX_BASE_URL;
+  const MAPBOX_BASE_URL = __BLAZOR_MAPBOX_URL__;
   const src = containerId
-      ? `http://192.168.171.30:57677/blazor/mapbox/${containerId}`
-      : `http://192.168.171.30:57677/blazor/mapbox`;
+    ? `${MAPBOX_BASE_URL}/${containerId}`
+    : MAPBOX_BASE_URL;
+  // const src = containerId
+  //     ? `http://192.168.171.30:57677/blazor/mapbox/${containerId}`
+  //     : `http://192.168.171.30:57677/blazor/mapbox`;
   
   useEffect(() => {
     onLoadChange?.(false); // reset loading on URL change

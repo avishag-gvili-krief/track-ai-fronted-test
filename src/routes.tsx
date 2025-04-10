@@ -1,9 +1,6 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+// File: AppRoutes.tsx
+
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Layout from "./Layout";
 import ManageCompany from "./pages/ManageCompany";
@@ -16,27 +13,20 @@ import WindWrapperPage from "./pages/WindWrapperPage";
 
 const AppRoutes = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
-        <Route path="/login" element={<Login />} />
-
-      
-
-        <Route path="" element={<Layout />}>
-          <Route
-            path="external-tracking/:containerId"
-            element={<WindWrapperPage />}
-          />
-          <Route path="dashboard" element={<DashboardWrapper />} />
-          <Route path="manage-company" element={<ManageCompany />} />
-          <Route path="manage-users" element={<ManageUsers />} />
-          <Route path="change-password" element={<ChangePassword />} />
-          <Route path="/add-company" element={<AddCompany />} />
-          <Route path="/add-user" element={<AddUser />} />
-        </Route>
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/logout" element={<Login />} />
+      <Route path="" element={<Layout />}>
+        <Route path="external-tracking/:containerId" element={<WindWrapperPage />} />
+        <Route path="dashboard" element={<DashboardWrapper />} />
+        <Route path="manage-company" element={<ManageCompany />} />
+        <Route path="manage-users" element={<ManageUsers />} />
+        <Route path="change-password" element={<ChangePassword />} />
+        <Route path="/add-company" element={<AddCompany />} />
+        <Route path="/add-user" element={<AddUser />} />
+      </Route>
+    </Routes>
   );
 };
 

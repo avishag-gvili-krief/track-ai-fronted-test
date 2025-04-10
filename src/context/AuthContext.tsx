@@ -1,27 +1,21 @@
 // File: src/context/AuthContext.tsx
 
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, ReactNode } from "react";
 import axiosInstance from "../api/axiosInstance";
 import { User } from "../types/AuthTypes";
 import { useLoading } from "./LoadingContext";
 import { Snackbar, AlertColor } from "@mui/material";
-import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   user: User | null;
+  isInitialized: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
   sendResetPassword: (userId: string) => Promise<boolean>;
-  verifyTempPassword: (
-    userId: string,
-    tempPassword: string
-  ) => Promise<boolean>;
-  resetPassword: (
-    userId: string,
-    tempPassword: string,
-    newPassword: string
-  ) => Promise<boolean>;
+  verifyTempPassword: (userId: string, tempPassword: string) => Promise<boolean>;
+  resetPassword: (userId: string, tempPassword: string, newPassword: string) => Promise<boolean>;
 }
 
 interface ToastState {
@@ -32,7 +26,7 @@ interface ToastState {
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const { showLoading, hideLoading } = useLoading();
@@ -41,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     message: "",
     severity: "info",
   });
-
+  const navigate = useNavigate();
   const showToast = (message: string, severity: AlertColor = "info") => {
     setToast({ open: true, message, severity });
   };
@@ -52,9 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const token = localStorage.getItem("token");
 
     if (token) {
-      axiosInstance.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${token}`;
+      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       fetchUser();
     } else {
       setIsInitialized(true);
@@ -82,12 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     } catch (error: any) {
       console.error("Failed to fetch user", error);
-
-      if (!user && !isInitialized) {
-        logout();
-      } else {
-        showToast("Failed to refresh user info", "error");
-      }
+      logout(); 
     } finally {
       hideLoading();
       setIsInitialized(true);
@@ -97,14 +84,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       showLoading();
-      const { data } = await axiosInstance.post("/auth/login", {
-        email,
-        password,
-      });
+      const { data } = await axiosInstance.post("/auth/login", { email, password });
       localStorage.setItem("token", data.token);
-      axiosInstance.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${data.token}`;
+      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
 
       setUser({
         id: data.id,
@@ -132,7 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem("token");
     setUser(null);
     delete axiosInstance.defaults.headers.common["Authorization"];
-    window.location.href = "/login";
+    // navigate("/login");
   };
 
   const sendResetPassword = async (userId: string) => {
@@ -166,11 +148,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const resetPassword = async (
-    userId: string,
-    tempPassword: string,
-    newPassword: string
-  ) => {
+  const resetPassword = async (userId: string, tempPassword: string, newPassword: string) => {
     try {
       showLoading();
       await axiosInstance.post("/auth/reset-password", {
@@ -179,7 +157,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         newPassword,
       });
       showToast("Password reset successfully", "success");
-      // await fetchUser();
       return true;
     } catch {
       showToast("Password reset failed", "error");
@@ -193,6 +170,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        isInitialized,
         login,
         logout,
         fetchUser,
@@ -201,31 +179,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         resetPassword,
       }}
     >
-      {!isInitialized ? null : (
-        <>
-          {children}
-          <Snackbar
-            open={toast.open}
-            autoHideDuration={3000}
-            onClose={closeToast}
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      {children}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={3000}
+        onClose={closeToast}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <div style={{ padding: 0 }}>
+          <div
+            style={{
+              backgroundColor: toast.severity === "success" ? "#4caf50" : "#f44336",
+              color: "#fff",
+              padding: "10px 20px",
+              borderRadius: 4,
+            }}
           >
-            <div style={{ padding: 0 }}>
-              <div
-                style={{
-                  backgroundColor:
-                    toast.severity === "success" ? "#4caf50" : "#f44336",
-                  color: "#fff",
-                  padding: "10px 20px",
-                  borderRadius: 4,
-                }}
-              >
-                {toast.message}
-              </div>
-            </div>
-          </Snackbar>
-        </>
-      )}
+            {toast.message}
+          </div>
+        </div>
+      </Snackbar>
     </AuthContext.Provider>
   );
 };

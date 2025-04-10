@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import {
@@ -15,12 +15,16 @@ import "../css/Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login,logout } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    logout();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,28 +35,20 @@ const Login = () => {
       return;
     }
 
-    setLoading(true);
+    // setLoading(true);
     try {
       await login(email, password);
       navigate("/dashboard");
     } catch {
       setError("Login failed. Please check your credentials.");
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
-      {loading ? (
-        <div className="loading-container">
-          <img
-            src="../../public/loading.gif"
-            alt="Loading..."
-            className="loading-image"
-          />
-        </div>
-      ) : (
+     
         <Container maxWidth="xs" className="login-box">
           <Box sx={{ textAlign: "center" }}>
             <Typography variant="h4" className="login-title">
@@ -118,7 +114,7 @@ const Login = () => {
             </form>
           </Box>
         </Container>
-      )}
+      
     </div>
   );
 };
