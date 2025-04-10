@@ -114,8 +114,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("token");
     setUser(null);
     delete axiosInstance.defaults.headers.common["Authorization"];
-    // navigate("/login");
+    navigate("/login", { replace: true }); 
   };
+  
 
   const sendResetPassword = async (userId: string) => {
     try {

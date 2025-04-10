@@ -1,4 +1,4 @@
-import AppRoutes from "./routes";
+import AppRoutes from "./router/routes";
 import { useAuth } from "./hooks/useAuth";
 import LoadingOverlay from "./component/LoadingOverlay";
 
