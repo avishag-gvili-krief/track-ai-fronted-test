@@ -30,6 +30,8 @@ import { filterShipments } from "../utils/filterUtils";
 import { showEventIconHandler } from "../utils/showEventIconHandler";
 import { formatDate } from "../utils/shipmentUtils";
 import { KeyboardArrowDown } from "@mui/icons-material";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 
 interface DashboardProps {
   isCompact: boolean;
@@ -43,6 +45,9 @@ const dataStore = {
   currentFilters: [] as string[],
 };
 const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
   const { user } = useContext(AuthContext);
   const { userPhones, fetchUserPhones } = useSmsContext();
   const { filterShipmentsByMultipleFields } = useWinwordContext();
@@ -269,7 +274,14 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     userPhones,
     (id) => setSelectedContainerId(id),
     setDialogOpen
-  );
+  ).filter((col) => {
+    if (
+      isMobile &&
+      ["vessel", "voyage", "pol", "latestCarrierETDOrATD"].includes(col.field)
+    )
+      return false;
+    return true;
+  });
 
   // Apply custom renderers to handle detail rows
   const columns = baseColumns.map((col) => ({
@@ -418,9 +430,15 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         mt={3}
         display="flex"
         flexDirection="column"
-        sx={{ height: "75vh" }} // גובה קבוע כולל
+        sx={{
+          height: isMobile
+            ? "calc(100vh - 220px)"
+            : isCompact
+            ? "50vh"
+            : "75vh",
+          px: isMobile ? 0 : 2,
+        }}
       >
-        {/* אזור תוכן נגלל בלבד */}
         <Box sx={{ flex: 1, overflowY: "auto" }}>
           <DataGrid
             rows={combinedRows}
@@ -523,11 +541,12 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
                 backgroundColor: "#e3f2fd",
               },
               "& .MuiDataGrid-cell": {
+                fontSize: isMobile ? "12px" : "14px",
+                px: isMobile ? 0.5 : 1,
                 borderBottom: "none !important",
                 borderTop: "none !important",
                 textAlign: "left",
               },
-
               "& .detail-row:not(.detail-header-row)::after": {
                 content: '""',
                 position: "absolute",
@@ -568,62 +587,80 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
               },
             }}
             getRowHeight={(params) => {
-              return params.model.isDetailRow ? 45 : 52;
+              return params.model.isDetailRow
+                ? isMobile
+                  ? 38
+                  : 45
+                : isMobile
+                ? 42
+                : 52;
             }}
             isRowSelectable={(params) => !params.row.isDetailRow}
           />{" "}
         </Box>
         <Box
-    display="flex"
-    justifyContent="space-between"
-    alignItems="center"
-    px={1}
-    py={1}
-    borderTop="1px solid #ddd"
-    bgcolor="#fff"
-  >
-    <Select
-      value={paginationModel.pageSize}
-      onChange={(e) =>
-        setPaginationModel({ page: 0, pageSize: Number(e.target.value) })
-      }
-      size="small"
-    >
-      {[10, 25, 100].map((size) => (
-        <MenuItem key={size} value={size}>
-          {size}
-        </MenuItem>
-      ))}
-    </Select>
-
-    <Pagination
-      count={Math.ceil(filteredRows.length / paginationModel.pageSize)}
-      page={paginationModel.page + 1}
-      onChange={(_, newPage) =>
-        setPaginationModel({ ...paginationModel, page: newPage - 1 })
-      }
-    />
-  </Box>
-</Box>
-
-        {selectedContainerId && (
-          <TrackDialog
-            key={selectedContainerId}
-            open={dialogOpen}
-            onClose={() => {
-              setDialogOpen(false);
-              setSelectedContainerId(null);
+          display="flex"
+          flexDirection={isMobile ? "column" : "row"}
+          justifyContent="space-between"
+          alignItems={isMobile ? "stretch" : "center"}
+          gap={isMobile ? 1.5 : 0}
+          px={isMobile ? 2 : 1}
+          py={1}
+          borderTop="1px solid #ddd"
+          bgcolor="#fff"
+        >
+          <Select
+            value={paginationModel.pageSize}
+            onChange={(e) =>
+              setPaginationModel({ page: 0, pageSize: Number(e.target.value) })
+            }
+            size="small"
+            sx={{
+              width: isMobile ? "100%" : "auto",
+              maxWidth: 120,
             }}
-            containerId={selectedContainerId}
-            userId={user?.id ?? ""}
-            existingEntry={userPhones.find(
-              (entry) => entry.container === selectedContainerId
-            )}
-            refresh={() => {
-              if (user?.id) fetchUserPhones(user.id);
+          >
+            {[10, 25, 100].map((size) => (
+              <MenuItem key={size} value={size}>
+                {size}
+              </MenuItem>
+            ))}
+          </Select>
+
+          <Pagination
+            count={Math.ceil(filteredRows.length / paginationModel.pageSize)}
+            page={paginationModel.page + 1}
+            onChange={(_, newPage) =>
+              setPaginationModel({ ...paginationModel, page: newPage - 1 })
+            }
+            size="small"
+            sx={{
+              width: isMobile ? "100%" : "auto",
+              justifyContent: "center",
+              display: "flex",
             }}
           />
-        )}
+        </Box>
+      </Box>
+
+      {selectedContainerId && (
+        <TrackDialog
+          key={selectedContainerId}
+          open={dialogOpen}
+          onClose={() => {
+            setDialogOpen(false);
+            setSelectedContainerId(null);
+          }}
+          containerId={selectedContainerId}
+          userId={user?.id ?? ""}
+          existingEntry={userPhones.find(
+            (entry) => entry.container === selectedContainerId
+          )}
+          refresh={() => {
+            if (user?.id) fetchUserPhones(user.id);
+          }}
+        />
+      )}
       {/* </Box> */}
     </Container>
   );

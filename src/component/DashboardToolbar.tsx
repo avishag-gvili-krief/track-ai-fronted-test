@@ -17,6 +17,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import FiltersPanel from "./FiltersPanel";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 interface Company {
   id: string;
@@ -57,6 +59,10 @@ const DashboardToolbar: React.FC<Props> = ({
   onApplyFilters,
 }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const isNarrow = isMobile || isTablet;
 
   const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
     if (!filterOpen) {
@@ -75,9 +81,11 @@ const DashboardToolbar: React.FC<Props> = ({
   return (
     <Box
       display="flex"
-      alignItems="center"
+      flexDirection={isNarrow ? "column" : "row"}
+      alignItems={isNarrow ? "stretch" : "center"}
       justifyContent="space-between"
-      sx={{ my: 2 }}
+      gap={isNarrow ? 1.5 : 2}
+      sx={{ my: 2, px: isNarrow ? 1 : 0 }}
     >
       <Tooltip title="Global Search">
         <TextField
@@ -88,7 +96,11 @@ const DashboardToolbar: React.FC<Props> = ({
           InputProps={{
             startAdornment: <SearchIcon sx={{ color: "gray", mr: 1 }} />,
           }}
-          sx={{ width: 250, bgcolor: "white", borderRadius: "4px" }}
+          sx={{
+            width: isMobile ? "100%" : 250,
+            bgcolor: "white",
+            borderRadius: "4px",
+          }}
         />
       </Tooltip>
 
@@ -99,7 +111,8 @@ const DashboardToolbar: React.FC<Props> = ({
             startIcon={<FilterListIcon />}
             onClick={handleFilterClick}
             sx={{
-              mx: 1,
+              mx: isMobile ? 0 : 1,
+              width: isMobile ? "100%" : "auto",
               bgcolor: "white",
               borderRadius: "8px",
               fontWeight: 600,
@@ -166,7 +179,7 @@ const DashboardToolbar: React.FC<Props> = ({
             return selectedNames.join(", ");
           }}
           sx={{
-            minWidth: 300,
+            minWidth: isMobile ? "100%" : 300,
             bgcolor: "white",
             borderRadius: "4px",
             fontWeight: 500,
@@ -186,7 +199,8 @@ const DashboardToolbar: React.FC<Props> = ({
       <Tooltip title="Download current table as Excel file">
         <Button
           sx={{
-            ml: 1,
+            ml: isNarrow ? 0 : 1,
+            width: isNarrow ? "100%" : "auto",
             bgcolor: "orange",
             color: "white",
             fontWeight: "bold",

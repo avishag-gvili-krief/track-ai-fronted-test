@@ -19,7 +19,7 @@ import {
   MenuItem,
   Backdrop,
 } from "@mui/material";
-import { AddCircleOutline} from "@mui/icons-material";
+import { AddCircleOutline } from "@mui/icons-material";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useNavigate } from "react-router-dom";
 import { exportCompaniesToExcel } from "../utils/exportToExcelCompanes";
@@ -109,41 +109,51 @@ export default function ManageCompany() {
   });
 
   return (
-    <Box sx={{ p: 3, width: "100%", maxWidth: "1400px", margin: "0 auto" }}>
+    <Box
+      sx={{
+        p: { xs: 2, md: 3 },
+        maxWidth: "1400px",
+        mx: "auto",
+      }}
+    >
       <Typography
         variant="h4"
-        sx={{
-          fontWeight: "bold",
-          color: "#1a237e",
-          textAlign: "center",
-          mb: 3,
-        }}
+        textAlign="center"
+        fontWeight="bold"
+        color="#1a237e"
+        mb={3}
       >
         Company Details
       </Typography>
-      <Backdrop
+      {/* <Backdrop
         open={isLoading}
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
-          <div className="loading-image"></div>
-          </Backdrop>
+        <div className="loading-image"></div>
+      </Backdrop> */}
 
       <Card sx={{ p: 2, mb: 3, borderRadius: "12px", boxShadow: 2 }}>
-        <Box
+      <Box
           display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
-          alignItems="center"
-          sx={{ mb: 2 }}
+          alignItems={{ xs: "stretch", sm: "center" }}
+          gap={2}
+          mb={2}
         >
           <TextField
-            label="Search..."
-            variant="outlined"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ flex: 1, mr: 2 }}
+             size="small"
+             margin="dense"
+             label="Search..."
+             variant="outlined"
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+             sx={{ flex: 1, mr: 2 }}
+             fullWidth
           />
           <Box>
             <Button
+            fullWidth
               startIcon={<AddCircleOutline />}
               sx={{ textTransform: "none", fontWeight: "bold", mr: 2 }}
               onClick={() => navigate("/add-company")}
@@ -154,6 +164,7 @@ export default function ManageCompany() {
               Upload Company
             </Button> */}
             <Button
+            fullWidth
               startIcon={<DownloadIcon />}
               sx={{
                 textTransform: "none",
@@ -179,12 +190,9 @@ export default function ManageCompany() {
         <TableContainer
           component={Paper}
           sx={{
-            width: "100%",
-            height: isRowSelected ? "400px" : "calc(100vh - 200px)",
+            maxHeight: selectedCompany ? 400 : "calc(100vh - 200px)",
+            overflowX: "auto",
             overflowY: "auto",
-            transition: "height 0.3s ease-in-out",
-            borderRadius: "12px",
-            boxShadow: 2,
           }}
         >
           <Table stickyHeader>

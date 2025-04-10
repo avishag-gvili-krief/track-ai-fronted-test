@@ -79,7 +79,6 @@ export default function ManageUsers() {
   };
 
   const handleRowClick = (user: any) => {
-    
     if (selectedUser?.id === user.id) {
       setSelectedUser(null);
     } else {
@@ -161,7 +160,13 @@ export default function ManageUsers() {
   );
 
   return (
-    <Box sx={{ p: 3, maxWidth: "1400px", mx: "auto" }}>
+    <Box
+      sx={{
+        p: { xs: 2, md: 3 },
+        maxWidth: "1400px",
+        mx: "auto",
+      }}
+    >
       <Typography
         variant="h4"
         textAlign="center"
@@ -171,24 +176,35 @@ export default function ManageUsers() {
       >
         User Details
       </Typography>
-      <Backdrop
+      {/* <Backdrop
         open={isLoading}
         sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
       >
         <div className="loading-image"></div>
-      </Backdrop>
+      </Backdrop> */}
 
       <Card sx={{ p: 2, mb: 3, borderRadius: 2, boxShadow: 2 }}>
-        <Box display="flex" justifyContent="space-between" mb={2}>
+        <Box
+          display="flex"
+          flexDirection={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "stretch", sm: "center" }}
+          gap={2}
+          mb={2}
+        >
           <TextField
+            size="small"
+            margin="dense"
             label="Search..."
             variant="outlined"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             sx={{ flex: 1, mr: 2 }}
+            fullWidth
           />
           <Box>
             <Button
+              fullWidth
               startIcon={<AddCircleOutline />}
               sx={{ textTransform: "none", fontWeight: "bold", mr: 2 }}
               onClick={() => navigate("/add-user")}
@@ -199,6 +215,7 @@ export default function ManageUsers() {
               Upload User
             </Button> */}
             <Button
+              fullWidth
               startIcon={<DownloadIcon />}
               onClick={() => exportUsersToExcel(filteredUsers)}
               sx={{
@@ -216,6 +233,7 @@ export default function ManageUsers() {
           component={Paper}
           sx={{
             maxHeight: selectedUser ? 400 : "calc(100vh - 200px)",
+            overflowX: "auto",
             overflowY: "auto",
           }}
         >
@@ -262,11 +280,14 @@ export default function ManageUsers() {
       {selectedUser && (
         <Card
           sx={{
-            p: 4,
+            px: { xs: 2, sm: 3, md: 4 },
+            py: { xs: 2, sm: 3 },
             borderRadius: "12px",
             boxShadow: 2,
             border: "1px solid #1a237e",
             mt: 3,
+            maxWidth: "100%",
+            overflow: "visible",
           }}
         >
           <Typography
@@ -281,37 +302,56 @@ export default function ManageUsers() {
             Edit User
           </Typography>
 
-          <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={3}>
+          <Box
+            display="grid"
+            gridTemplateColumns={{
+              xs: "1fr",
+              sm: "1fr", 
+              md: "repeat(2, 1fr)",
+            }}
+            gap={2}
+            sx={{
+              width: "100%",
+              overflowX: "hidden",
+            }}
+          >
             <TextField
+              size="small"
+              margin="dense"
+              fullWidth
               label="First Name"
               name="firstName"
               value={selectedUser.firstName}
               onChange={(e) => handleFieldChange(e, "firstName")}
-              fullWidth
               error={!!errors.firstName}
               helperText={errors.firstName}
             />
             <TextField
+              fullWidth
+              size="small"
+              margin="dense"
               label="Last Name"
               name="lastName"
               value={selectedUser.lastName}
               onChange={(e) => handleFieldChange(e, "lastName")}
-              fullWidth
               error={!!errors.lastName}
               helperText={errors.lastName}
             />
             <TextField
+              fullWidth
+              size="small"
+              margin="dense"
               label="Email Address"
               name="email"
               value={selectedUser.email}
               onChange={(e) => handleFieldChange(e, "email")}
-              fullWidth
               error={!!errors.email}
               helperText={errors.email}
             />
             <FormControl fullWidth>
               <InputLabel>Status</InputLabel>
               <Select
+                fullWidth
                 name="status"
                 value={selectedUser.status}
                 onChange={(e) =>
@@ -327,6 +367,8 @@ export default function ManageUsers() {
             </FormControl>
 
             <Autocomplete
+              size="small"
+              fullWidth
               multiple
               options={companies}
               disableCloseOnSelect
@@ -351,6 +393,7 @@ export default function ManageUsers() {
               )}
               renderInput={(params) => (
                 <TextField
+                  margin="dense"
                   {...params}
                   label="Select Companies"
                   placeholder="Search company by name or number"
@@ -370,13 +413,28 @@ export default function ManageUsers() {
                     phoneNumber: value,
                   }))
                 }
-                inputStyle={{ width: "100%" }}
+                inputStyle={{
+                  width: "100%",
+                  fontSize: "16px",
+                  paddingLeft: "48px",
+                  height: "40px",
+                }}
+                buttonStyle={{
+                  borderTopLeftRadius: 4,
+                  borderBottomLeftRadius: 4,
+                }}
+                containerStyle={{
+                  width: "100%",
+                }}
               />
             </Box>
 
             <FormControl fullWidth disabled={!isSuperAdmin}>
               <InputLabel>User Type</InputLabel>
               <Select
+                size="small"
+                margin="dense"
+                fullWidth
                 name="userType"
                 value={selectedUser.userType}
                 onChange={(e) => handleFieldChange(e, "userType")}
@@ -390,6 +448,9 @@ export default function ManageUsers() {
             <FormControl fullWidth>
               <InputLabel id="reminders-label">Reminders</InputLabel>
               <Select
+                size="small"
+                margin="dense"
+                fullWidth
                 key={selectedUser.id}
                 labelId="reminders-label"
                 multiple
@@ -417,19 +478,29 @@ export default function ManageUsers() {
             </FormControl>
 
             <TextField
+              fullWidth
+              size="small"
+              margin="dense"
               label="Password"
               name="password"
               value={selectedUser.password || ""}
               onChange={(e) => handleFieldChange(e, "password")}
-              fullWidth
               type="password"
               error={!!errors.password}
               helperText={errors.password}
             />
           </Box>
 
-          <Box display="flex" justifyContent="center" gap={2} mt={4}>
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            justifyContent="center"
+            alignItems="center"
+            gap={2}
+            mt={4}
+          >
             <Button
+              fullWidth={true}
               variant="contained"
               onClick={validateAndSave}
               sx={{
@@ -439,11 +510,14 @@ export default function ManageUsers() {
                 textTransform: "none",
                 borderRadius: "8px",
                 px: 4,
+                width: { xs: "100%", sm: "auto" },
+                minWidth: "120px",
               }}
             >
               Update
             </Button>
             <Button
+              fullWidth={true}
               variant="contained"
               onClick={() => setSelectedUser(null)}
               sx={{
@@ -453,6 +527,8 @@ export default function ManageUsers() {
                 textTransform: "none",
                 borderRadius: "8px",
                 px: 4,
+                width: { xs: "100%", sm: "auto" },
+                minWidth: "120px",
               }}
             >
               Cancel

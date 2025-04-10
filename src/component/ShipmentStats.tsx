@@ -2,6 +2,8 @@
 
 import React from "react";
 import { Box, Typography } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 interface ShipmentStatsProps {
   stats: {
@@ -23,9 +25,15 @@ interface StatusKey {
 /**
  * Displays visual summary of shipment status counts with colored progress bars.
  */
-const ShipmentStats: React.FC<ShipmentStatsProps> = ({ stats, statusColors }) => {
+const ShipmentStats: React.FC<ShipmentStatsProps> = ({
+  stats,
+  statusColors,
+}) => {
   const getPercentage = (value: number) =>
     stats.total ? (value / stats.total) * 100 : 0;
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const statusKeys: StatusKey[] = [
     { label: "On Time", key: "onTime" },
@@ -36,12 +44,19 @@ const ShipmentStats: React.FC<ShipmentStatsProps> = ({ stats, statusColors }) =>
   ];
 
   return (
-    <Box display="flex" alignItems="center">
+    <Box
+      display="flex"
+      flexDirection={isMobile ? "column" : "row"}
+      alignItems={isMobile ? "stretch" : "center"}
+      gap={isMobile ? 2 : 0}
+    >
       <Box
         sx={{
           textAlign: "center",
-          pr: 3,
-          borderRight: "1px solid #e0e0e0",
+          pr: isMobile ? 0 : 3,
+          borderRight: isMobile ? "none" : "1px solid #e0e0e0",
+          borderBottom: isMobile ? "1px solid #e0e0e0" : "none",
+          pb: isMobile ? 1 : 0,
         }}
       >
         <Typography variant="h4" sx={{ fontWeight: "bold", color: "#1e293b" }}>
@@ -55,7 +70,14 @@ const ShipmentStats: React.FC<ShipmentStatsProps> = ({ stats, statusColors }) =>
       <Box sx={{ flex: 1, pl: 3 }}>
         {statusKeys.map(({ label, key }) => (
           <Box key={key} display="flex" alignItems="center" mb={0.5}>
-            <Typography variant="body2" sx={{ width: 180, fontWeight: 600 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                width: isMobile ? 130 : 180,
+                fontWeight: 600,
+                fontSize: isMobile ? "13px" : "14px",
+              }}
+            >
               {label}
             </Typography>
             <Box
@@ -70,7 +92,7 @@ const ShipmentStats: React.FC<ShipmentStatsProps> = ({ stats, statusColors }) =>
               <Box
                 sx={{
                   width: `${getPercentage(stats[key])}%`,
-                  height: 8,
+                  height: isMobile ? 6 : 8,
                   backgroundColor: statusColors[key],
                   transition: "width 0.5s ease-in-out",
                 }}
