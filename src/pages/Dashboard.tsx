@@ -32,6 +32,7 @@ import { formatDate } from "../utils/shipmentUtils";
 import { KeyboardArrowDown } from "@mui/icons-material";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
+import { useCompanyContext } from "../context/CompanyContext";
 
 interface DashboardProps {
   isCompact: boolean;
@@ -57,7 +58,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
     null
   );
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
-  const gridContainerRef = useRef<HTMLDivElement>(null);
+  const { companies, fetchCompanies } = useCompanyContext();
   const {
     searchText,
     requestSearch,
@@ -92,6 +93,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
       setDisplayData(userData);
     }
   }, [user?.winwordData]);
+  useEffect(() => {
+    if ((user?.role === 1 || user?.role === 3) && companies.length === 0) {
+      fetchCompanies();
+    }
+  }, [user?.role]);
 
   useEffect(() => {
     if (user?.id) fetchUserPhones(user.id);
@@ -419,7 +425,11 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
         pendingStatuses={selectedStatuses}
         handlePendingFilterChange={handlePendingFilterChange}
         handleDownloadExcel={handleDownloadExcel}
-        companies={user?.activeCustomers || []}
+        companies={
+          user?.role === 1 || user?.role === 3
+            ? companies 
+            : user?.activeCustomers || [] 
+        }
         onApplyFilters={handleApplyFilters}
       />
 
@@ -439,7 +449,16 @@ const Dashboard: React.FC<DashboardProps> = ({ isCompact, onRowSelected }) => {
           px: isMobile ? 0 : 2,
         }}
       >
-        <Box sx={{ flex: 1, overflowY: "auto" }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            scrollbarWidth: "none", // Firefox
+            "&::-webkit-scrollbar": {
+              display: "none", // Chrome/Safari
+            },
+          }}
+        >
           <DataGrid
             rows={combinedRows}
             columns={columns}

@@ -155,7 +155,7 @@ const DashboardToolbar: React.FC<Props> = ({
         </Popper>
       </Box>
 
-      <Tooltip title="Filter data by one or more companies">
+      {/* <Tooltip title="Filter data by one or more companies"> */}
         <Select
           multiple
           displayEmpty
@@ -195,7 +195,7 @@ const DashboardToolbar: React.FC<Props> = ({
             );
           })}
         </Select>
-      </Tooltip>
+      {/* </Tooltip> */}
       <Tooltip title="Download current table as Excel file">
         <Button
           sx={{

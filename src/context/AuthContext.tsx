@@ -1,4 +1,4 @@
-// File: src/context/AuthContext.tsx
+// ✅ AuthContext.tsx — full client support for dual password reset (email/userId)
 
 import { createContext, useState, useEffect, ReactNode } from "react";
 import axiosInstance from "../api/axiosInstance";
@@ -16,6 +16,9 @@ interface AuthContextType {
   sendResetPassword: (userId: string) => Promise<boolean>;
   verifyTempPassword: (userId: string, tempPassword: string) => Promise<boolean>;
   resetPassword: (userId: string, tempPassword: string, newPassword: string) => Promise<boolean>;
+  sendResetPasswordByEmail: (email: string) => Promise<boolean>;
+  verifyTempPasswordByEmail: (email: string, tempPassword: string) => Promise<boolean>;
+  resetPasswordByEmail: (email: string, tempPassword: string, newPassword: string) => Promise<boolean>;
 }
 
 interface ToastState {
@@ -30,12 +33,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const { showLoading, hideLoading } = useLoading();
-  const [toast, setToast] = useState<ToastState>({
-    open: false,
-    message: "",
-    severity: "info",
-  });
+  const [toast, setToast] = useState<ToastState>({ open: false, message: "", severity: "info" });
   const navigate = useNavigate();
+
   const showToast = (message: string, severity: AlertColor = "info") => {
     setToast({ open: true, message, severity });
   };
@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (token) {
       axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       fetchUser();
@@ -57,7 +56,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       showLoading();
       const { data } = await axiosInstance.get<User>("/auth/me");
-
       setUser({
         id: data.id,
         email: data.email,
@@ -74,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (error: any) {
       console.error("Failed to fetch user", error);
-      logout(); 
+      logout();
     } finally {
       hideLoading();
       setIsInitialized(true);
@@ -87,7 +85,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data } = await axiosInstance.post("/auth/login", { email, password });
       localStorage.setItem("token", data.token);
       axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
-
       setUser({
         id: data.id,
         email: data.email,
@@ -114,9 +111,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("token");
     setUser(null);
     delete axiosInstance.defaults.headers.common["Authorization"];
-    navigate("/login", { replace: true }); 
+    navigate("/login", { replace: true });
   };
-  
 
   const sendResetPassword = async (userId: string) => {
     try {
@@ -135,10 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const verifyTempPassword = async (userId: string, tempPassword: string) => {
     try {
       showLoading();
-      await axiosInstance.post("/auth/verify-temp-password", {
-        userId,
-        tempPassword,
-      });
+      await axiosInstance.post("/auth/verify-temp-password", { userId, tempPassword });
       showToast("Identity verified", "success");
       return true;
     } catch {
@@ -152,11 +145,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const resetPassword = async (userId: string, tempPassword: string, newPassword: string) => {
     try {
       showLoading();
-      await axiosInstance.post("/auth/reset-password", {
-        userId,
-        tempPassword,
-        newPassword,
+      await axiosInstance.post("/auth/reset-password", { userId, tempPassword, newPassword });
+      showToast("Password reset successfully", "success");
+      return true;
+    } catch {
+      showToast("Password reset failed", "error");
+      return false;
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const sendResetPasswordByEmail = async (email: string) => {
+    try {
+      showLoading();
+      await axiosInstance.post("/auth/reset-password-request-by-email", JSON.stringify(email), {
+        headers: { "Content-Type": "application/json" },
       });
+      showToast("Temporary password sent to your email", "success");
+      return true;
+    } catch {
+      showToast("Failed to send temporary password", "error");
+      return false;
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const verifyTempPasswordByEmail = async (email: string, tempPassword: string) => {
+    try {
+      showLoading();
+      await axiosInstance.post("/auth/verify-temp-password-by-email", { email, tempPassword });
+      showToast("Identity verified", "success");
+      return true;
+    } catch {
+      showToast("Invalid or expired temporary password", "error");
+      return false;
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const resetPasswordByEmail = async (email: string, tempPassword: string, newPassword: string) => {
+    try {
+      showLoading();
+      await axiosInstance.post("/auth/reset-password-by-email", { email, tempPassword, newPassword });
       showToast("Password reset successfully", "success");
       return true;
     } catch {
@@ -178,6 +211,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         sendResetPassword,
         verifyTempPassword,
         resetPassword,
+        sendResetPasswordByEmail,
+        verifyTempPasswordByEmail,
+        resetPasswordByEmail,
       }}
     >
       {children}

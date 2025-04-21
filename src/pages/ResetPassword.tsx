@@ -1,4 +1,4 @@
-// File: src/pages/ResetPasswordFlow.tsx
+// ✅ ResetPassword.tsx — updated with email input if user not connected
 
 import React, { useContext, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,14 +16,22 @@ import {
 
 const ResetPasswordFlow = () => {
   const [error, setError] = useState("");
-  const { user, sendResetPassword, verifyTempPassword, resetPassword } =
-    useContext(AuthContext)!;
+  const {
+    user,
+    sendResetPassword,
+    sendResetPasswordByEmail,
+    verifyTempPassword,
+    verifyTempPasswordByEmail,
+    resetPassword,
+    resetPasswordByEmail,
+  } = useContext(AuthContext)!;
   const navigate = useNavigate();
 
   const [step, setStep] = useState<"start" | "verify" | "newPassword">("start");
   const [tempPassword, setTempPassword] = useState<string[]>(Array(8).fill(""));
   const [newPassword, setNewPassword] = useState("");
   const [storedTempPassword, setStoredTempPassword] = useState("");
+  const [emailInput, setEmailInput] = useState("");
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -60,13 +68,17 @@ const ResetPasswordFlow = () => {
   };
 
   const handleSendResetPassword = async () => {
-    const success = await sendResetPassword(user?.id!);
+    const success = user
+      ? await sendResetPassword(user.id)
+      : await sendResetPasswordByEmail(emailInput);
     if (success) setStep("verify");
   };
 
   const handleVerifyPassword = async () => {
     const password = tempPassword.join("");
-    const success = await verifyTempPassword(user?.id!, password);
+    const success = user
+      ? await verifyTempPassword(user.id, password)
+      : await verifyTempPasswordByEmail(emailInput, password);
     if (success) {
       setStoredTempPassword(password);
       setStep("newPassword");
@@ -80,11 +92,9 @@ const ResetPasswordFlow = () => {
   };
 
   const handleResetPassword = async () => {
-    const success = await resetPassword(
-      user?.id!,
-      storedTempPassword,
-      newPassword
-    );
+    const success = user
+      ? await resetPassword(user.id, storedTempPassword, newPassword)
+      : await resetPasswordByEmail(emailInput, storedTempPassword, newPassword);
     if (success) {
       navigate("/login");
     }
@@ -109,6 +119,15 @@ const ResetPasswordFlow = () => {
             {step === "start" && (
               <>
                 <Typography variant="h5">Reset your password</Typography>
+                {!user && (
+                  <TextField
+                    label="Email address"
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    fullWidth
+                  />
+                )}
                 <Button
                   variant="contained"
                   onClick={handleSendResetPassword}

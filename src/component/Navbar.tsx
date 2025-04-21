@@ -57,7 +57,17 @@ export default function Navbar() {
       >
         <Typography
           variant="h6"
-          sx={{ flexGrow: 1, fontWeight: "bold", mt: 1 }}
+          sx={{
+            flexGrow: 1,
+            fontWeight: "bold",
+            mt: 1,
+            cursor: user ? "pointer" : "default",
+          }}
+          onClick={() => {
+            if (user) {
+              navigate("/dashboard");
+            }
+          }}
         >
           <img
             src="/Krief-white-logo.png"
