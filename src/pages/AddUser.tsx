@@ -220,8 +220,8 @@ export default function AddUser() {
             >
               <MenuItem value="Standard">Standard</MenuItem>
               <MenuItem value="Admin">Admin</MenuItem>
-              <MenuItem value="Super Admin">Super Admin</MenuItem>
-            </Select>
+              {isSuperAdmin && <MenuItem value="Super Admin">Super Admin</MenuItem>}
+              </Select>
           </FormControl>
 
           <FormControl fullWidth>

@@ -253,25 +253,47 @@ const ResetPasswordFlow = () => {
                 >
                   Resend temporary password
                 </Typography>
-                <Button
-                  variant="outlined"
-                  onClick={() => navigate("/dashboard")}
-                  sx={{
-                    mt: 1,
-                    color: "#1a237e",
-                    borderColor: "#1a237e",
-                    fontWeight: "bold",
-                    textTransform: "none",
-                    borderRadius: "8px",
-                    px: 4,
-                    "&:hover": {
-                      backgroundColor: "#e8eaf6",
+                {user ? (
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate("/dashboard")}
+                    sx={{
+                      mt: 1,
+                      color: "#1a237e",
                       borderColor: "#1a237e",
-                    },
-                  }}
-                >
-                  Back to Dashboard
-                </Button>
+                      fontWeight: "bold",
+                      textTransform: "none",
+                      borderRadius: "8px",
+                      px: 4,
+                      "&:hover": {
+                        backgroundColor: "#e8eaf6",
+                        borderColor: "#1a237e",
+                      },
+                    }}
+                  >
+                    Back to Dashboard
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate("/login")}
+                    sx={{
+                      mt: 1,
+                      color: "#1a237e",
+                      borderColor: "#1a237e",
+                      fontWeight: "bold",
+                      textTransform: "none",
+                      borderRadius: "8px",
+                      px: 4,
+                      "&:hover": {
+                        backgroundColor: "#e8eaf6",
+                        borderColor: "#1a237e",
+                      },
+                    }}
+                  >
+                    Back to login
+                  </Button>
+                )}
               </>
             )}
 

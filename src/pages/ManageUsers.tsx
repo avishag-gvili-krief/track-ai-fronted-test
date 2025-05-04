@@ -40,7 +40,6 @@ export default function ManageUsers() {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const auth = useContext(AuthContext);
   const isSuperAdmin = auth?.user?.role === 1;
-  const [isLoading, setIsLoading] = useState(true);
 
   const defaultReminders = [
     "Sunday",
@@ -55,12 +54,10 @@ export default function ManageUsers() {
   useEffect(() => {
     const loadData = async () => {
       if (!didFetch.current) {
-        setIsLoading(true);
         await fetchUsers();
-        setIsLoading(false);
         didFetch.current = true;
       } else {
-        setIsLoading(false);
+        console.info("no fetch!")
       }
     };
     loadData();
@@ -176,12 +173,6 @@ export default function ManageUsers() {
       >
         User Details
       </Typography>
-      {/* <Backdrop
-        open={isLoading}
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-      >
-        <div className="loading-image"></div>
-      </Backdrop> */}
 
       <Card sx={{ p: 2, mb: 3, borderRadius: 2, boxShadow: 2 }}>
         <Box
