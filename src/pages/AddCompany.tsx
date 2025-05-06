@@ -50,7 +50,7 @@ export default function AddCompany() {
 
     // Validate customerName
     if (newCompany.customerName == "") {
-      newErrors.customerName = "Customer name must";
+      newErrors.customerName = "Customer name must !";
       isValid = false;
     }
     setErrors(newErrors);
